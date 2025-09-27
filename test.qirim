@@ -1,0 +1,8 @@
+fun main() {
+    val x: Int 
+    123x1 = 15 
+    var y = x @ 2 
+    print("Result: $y")
+}
+
+
