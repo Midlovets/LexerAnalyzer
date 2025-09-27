@@ -2,38 +2,38 @@
 # Таблиця лексем мови Qirim
 tokenTable = {
     # Ключові слова
-    'fun':'keyword', 'main':'keyword', 'val':'keyword', 'var':'keyword', 
-    'if':'keyword', 'else':'keyword', 'when':'keyword', 'for':'keyword', 
-    'do':'keyword', 'while':'keyword', 'return':'keyword', 'continue':'keyword', 
-    'break':'keyword', 'is':'keyword', 'in':'keyword', 'downTo':'keyword', 
-    'step':'keyword', 'readLine':'keyword', 'print':'keyword',
-    
+    'fun': 'keyword', 'main': 'keyword', 'val': 'keyword', 'var': 'keyword',
+    'if': 'keyword', 'else': 'keyword', 'when': 'keyword', 'for': 'keyword',
+    'do': 'keyword', 'while': 'keyword', 'return': 'keyword', 'continue': 'keyword',
+    'break': 'keyword', 'is': 'keyword', 'in': 'keyword', 'downTo': 'keyword',
+    'step': 'keyword', 'readLine': 'keyword', 'print': 'keyword',
+
     # Типи даних
-    'Int':'type', 'Real':'type', 'String':'type', 'Boolean':'type', 'Unit':'type',
-    
+    'Int': 'type', 'Real': 'type', 'String': 'type', 'Boolean': 'type', 'Unit': 'type',
+
     # Логічні константи
-    'true':'bool_const', 'false':'bool_const',
-    
+    'true': 'bool_const', 'false': 'bool_const',
+
     # Оператори
-    '=':'assign_op', 
-    '+':'add_op', '-':'add_op', 
-    '*':'mult_op', '/':'mult_op', '%':'mult_op',
-    '**':'exp_op',
-    '==':'rel_op', '!=':'rel_op', '<':'rel_op', '>':'rel_op', 
-    '<=':'rel_op', '>=':'rel_op',
-    '&&':'logical_op', '||':'logical_op', '!':'logical_op',
-    
+    '=': 'assign_op',
+    '+': 'add_op', '-': 'add_op',
+    '*': 'mult_op', '/': 'mult_op', '%': 'mult_op',
+    '**': 'exp_op',
+    '==': 'rel_op', '!=': 'rel_op', '<': 'rel_op', '>': 'rel_op',
+    '<=': 'rel_op', '>=': 'rel_op',
+    '&&': 'logical_op', '||': 'logical_op', '!': 'logical_op',
+
     # Роздільники і дужки
-    '(':'brackets_op', ')':'brackets_op', '{':'brackets_op', '}':'brackets_op',
-    '.':'punct', ',':'punct', ':':'punct', ';':'punct', '?':'punct', 
-    "'":"punct", '"':'punct', '`':'punct', '->':'punct', '..':'punct',
-    
+    '(': 'brackets_op', ')': 'brackets_op', '{': 'brackets_op', '}': 'brackets_op',
+    '.': 'punct', ',': 'punct', ':': 'punct', ';': 'punct', '?': 'punct',
+    "'": "punct", '"': 'punct', '`': 'punct', '->': 'punct', '..': 'punct',
+
     # Пробільні символи
-    '\t':'ws', ' ':'ws', '\f':'ws', '\n':'nl', '\r':'nl'
+    '\t': 'ws', ' ': 'ws', '\f': 'ws', '\n': 'nl', '\r': 'nl'
 }
 
 # Решту токенів визначаємо не за лексемою, а за заключним станом
-tokStateTable = {2:'identifier', 6:'real_const', 9:'int_const', 11:'string_const'}
+tokStateTable = {2: 'identifier', 6: 'real_const', 9: 'int_const', 11: 'string_const'}
 
 # Діаграма станів для мови Qirim
 # Стани:
@@ -56,36 +56,40 @@ tokStateTable = {2:'identifier', 6:'real_const', 9:'int_const', 11:'string_const
 # 16 - перехід з числа в ідентифікатор (123x -> ідентифікатор)
 # 17 - читання коментаря
 # 20 - читання екранованого ідентифікатора
-# 101, 102 - стани помилок
+# 101 - стан помилок
 
 stf = {
     # Ідентифікатори та ключові слова
-    (0,'Letter'): 1, (1,'Letter'): 1, (1,'Digit'): 1, (1,'_'): 1, 
-    (1,'other'): 2,
-    
+    (0, 'Letter'): 1, (1, 'Letter'): 1, (1, 'Digit'): 1, (1, '_'): 1,
+    (1, 'other'): 2,
+
     # Числа
-    (0,'Digit'): 4, (4,'Digit'): 4, (4,'_'): 4, (4,'dot'): 5, 
+    (0, 'Digit'): 4, (4, 'Digit'): 4, (4, '_'): 4, (4, 'dot'): 5,
     # ВИПРАВЛЕННЯ: якщо після числа йде літера, це стає ідентифікатором
-    (4,'Letter'): 16, (4,'_'): 16, (4,'other'): 9,
-    (5,'Digit'): 5, (5,'_'): 5, 
+    (4, 'Letter'): 16, (4, '_'): 16, (4, 'other'): 9,
+    (5, 'Digit'): 5, (5, '_'): 5,
     # ВИПРАВЛЕННЯ: якщо після дробового числа йде літера, це стає ідентифікатором
-    (5,'Letter'): 16, (5,'other'): 6,
-    
+    (5, 'Letter'): 16, (5, 'other'): 6,
+
     # Новий стан для переходу з числа в ідентифікатор
-    (16,'Letter'): 16, (16,'Digit'): 16, (16,'_'): 16, (16,'other'): 2,
-    
-    # Рядкові константи (проста обробка без інтерполяції)
-    (0, '"'): 7, (7,'other'): 7, (7,'"'): 11,
-    
+    (16, 'Letter'): 16, (16, 'Digit'): 16, (16, '_'): 16, (16, 'other'): 2,
+
+    # ВИПРАВЛЕНО: Рядкові константи
+    (0, '"'): 8,  # Перехід відразу в стан читання рядка
+    (8, '"'): 11,  # Закриваюча лапка завершує рядок
+    (8, 'other'): 8,  # Будь-який інший символ продовжує рядок
+    (8, 'nl'): 8,  # Новий рядок теж може бути частиною рядка
+    (8, 'ws'): 8,  # Пробільні символи в рядку
+
     # Екрановані ідентифікатори
-    (0, '`'): 20, (20,'other'): 20, (20,'`'): 2,
-    
+    (0, '`'): 20, (20, 'other'): 20, (20, '`'): 2,
+
     # Прості оператори
     (0, '+'): 12, (0, '-'): 12, (0, '*'): 10, (0, '/'): 15, (0, '%'): 12,
     (0, '('): 12, (0, ')'): 12, (0, '{'): 12, (0, '}'): 12,
-    (0, '.'): 14, (0, ','): 12, (0, ':'): 12, (0, ';'): 12, 
+    (0, '.'): 14, (0, ','): 12, (0, ':'): 12, (0, ';'): 12,
     (0, '?'): 12, (0, "'"): 12,
-    
+
     # Складені оператори
     (0, '='): 10, (10, '='): 12,  # = або ==
     (0, '!'): 10, (10, '='): 12,  # ! або !=
@@ -96,27 +100,27 @@ stf = {
     (10, '*'): 12,  # **
     (14, '.'): 12,  # ..
     (10, 'other'): 12,  # завершення складеного оператора
-    
+
     # Пробільні символи
     (0, 'ws'): 0,
     (0, 'nl'): 13,
-    
+
     # Коментарі
     (15, '/'): 17, (17, 'other'): 17, (17, 'nl'): 0,
     (15, 'other'): 12,  # просто ділення
-    
+
     # Помилки
     (0, 'other'): 101
 }
 
-initState = 0   # стартовий стан
+initState = 0  # стартовий стан
 F = {2, 6, 9, 10, 11, 12, 13}  # фінальні стани
-Fstar = {2, 6, 9}   # стани зі зірочкою (відкат символу)
+Fstar = {2, 6, 9}  # стани зі зірочкою (відкат символу)
 Ferror = {101, 102}  # стани помилок
 
-tableOfId = {}     # Таблиця ідентифікаторів
+tableOfId = {}  # Таблиця ідентифікаторів
 tableOfConst = {}  # Таблиця констант
-tableOfSymb = {}   # Таблиця символів програми
+tableOfSymb = {}  # Таблиця символів програми
 
 state = initState
 FSuccess = ('Lexer', False)
@@ -142,6 +146,7 @@ numChar = -1
 char = ''
 lexeme = ''
 
+
 def lex():
     """Основна функція лексичного аналізу"""
     global state, numLine, char, lexeme, numChar, FSuccess
@@ -150,43 +155,48 @@ def lex():
             char = nextChar()
             classCh = classOfChar(char)
             state = nextState(state, classCh)
-            
+
             # Перевіряємо на помилку відразу після отримання нового стану
             if state in Ferror:
                 # Додаємо проблемний символ до лексеми перед обробкою помилки
                 lexeme += char
                 fail()
                 return  # Зупиняємо аналіз при помилці
-                
+
             if is_final(state):
                 processing()
             elif state == initState:
                 lexeme = ''
             else:
                 lexeme += char
-                
+
         # Перевіряємо, чи завершили аналіз у правильному стані
         if state != initState and state not in F:
             print(f'Лексер: у рядку {numLine} незавершена лексема "{lexeme}"')
             FSuccess = ('Lexer', False)
             return
-                
+
         print('Лексер: Лексичний аналіз завершено успішно')
         FSuccess = ('Lexer', True)
     except SystemExit as e:
         print(f'Лексер: Аварійне завершення програми з кодом {e}')
         FSuccess = ('Lexer', False)
 
+
 def processing():
     """Обробка фінальних станів"""
     global state, lexeme, char, numLine, numChar, tableOfSymb
-    
+
     if state == 13:  # новий рядок
         numLine += 1
         state = initState
         return
-        
+
     if state in (2, 6, 9, 11):  # ідентифікатори, числа, рядки
+        # ВИПРАВЛЕНО: Для рядкових констант додаємо останній символ (закриваючу лапку)
+        if state == 11:
+            lexeme += char
+
         token = getToken(state, lexeme)
         if token in ('identifier', 'int_const', 'real_const', 'string_const'):
             index = indexIdConst(state, lexeme)
@@ -195,33 +205,34 @@ def processing():
         else:  # ключові слова, типи або константи
             print('{0:<3d} {1:<15s} {2:<15s}'.format(numLine, lexeme, token))
             tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, '')
-        
+
         lexeme = ''
         if state in Fstar:
             numChar = putCharBack(numChar)
         state = initState
-        
+
     if state in (10, 12):  # оператори
         if state == 10:  # складений оператор не завершено
             lexeme += char
         else:  # складений оператор завершено
             lexeme += char
-            
+
         token = getToken(state, lexeme)
         print('{0:<3d} {1:<15s} {2:<15s}'.format(numLine, lexeme, token))
         tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, '')
         lexeme = ''
         state = initState
 
+
 def fail():
     """Обробка помилок"""
     global state, numLine, char, lexeme, FSuccess
     FSuccess = ('Lexer', False)
-    
+
     if state == 101:
         # Виводимо інформацію про проблемний токен
         print(f'{numLine:<3d} {lexeme:<15s} {"UNKNOWN":<15s} {"ERROR":<5s}')
-        
+
         if char == '@':
             print(f'Лексер: у рядку {numLine} неочікуваний символ "{char}" (символ @ не підтримується в мові Qirim)')
         elif char in '#$%^&~`':
@@ -230,12 +241,12 @@ def fail():
             print(f'Лексер: у рядку {numLine} неочікуваний керівний символ (код {ord(char)})')
         else:
             print(f'Лексер: у рядку {numLine} неочікуваний символ "{char}"')
-        
+
         # Додаємо проблемний токен до таблиці символів
         tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, 'UNKNOWN', 'ERROR')
-            
+
         exit(101)
-        
+
     if state == 102:
         print(f'Лексер: у рядку {numLine} помилка у складному операторі')
         if lexeme:
@@ -244,9 +255,11 @@ def fail():
             tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, 'UNKNOWN', 'ERROR')
         exit(102)
 
+
 def is_final(state):
     """Перевірка чи є стан фінальним"""
     return state in F
+
 
 def nextState(state, classCh):
     """Визначення наступного стану"""
@@ -260,6 +273,7 @@ def nextState(state, classCh):
             # Якщо і загального переходу немає, повертаємо помилку
             return 101
 
+
 def nextChar():
     """Отримання наступного символу"""
     global numChar
@@ -268,9 +282,11 @@ def nextChar():
         return sourceCode[numChar]
     return ''
 
+
 def putCharBack(numChar):
     """Повернення символу назад"""
     return numChar - 1
+
 
 def classOfChar(char):
     """Визначення класу символу"""
@@ -299,6 +315,7 @@ def classOfChar(char):
     else:
         return 'other'
 
+
 def getToken(state, lexeme):
     """Отримання типу токену"""
     # Спочатку перевіряємо в таблиці точних збігів
@@ -308,6 +325,7 @@ def getToken(state, lexeme):
     if state in tokStateTable:
         return tokStateTable[state]
     return 'unknown'
+
 
 def indexIdConst(state, lexeme):
     """Отримання індексу ідентифікатора або константи"""
@@ -324,6 +342,7 @@ def indexIdConst(state, lexeme):
             tableOfConst[lexeme] = (tokStateTable[state], indx)
     return indx
 
+
 # Запуск лексичного аналізатора
 print("=== ЛЕКСИЧНИЙ АНАЛІЗ ПРОГРАМИ НА МОВІ QIRIM ===")
 print("Рядок Лексема         Токен           Індекс")
@@ -339,11 +358,11 @@ if FSuccess[1]:  # Якщо аналіз був успішним
     print('Таблиця символів програми:')
     for key, value in tableOfSymb.items():
         print(f'{key}: {value}')
-        
+
     print('\nТаблиця ідентифікаторів:')
     for key, value in tableOfId.items():
         print(f'{value}: {key}')
-        
+
     print('\nТаблиця констант:')
     for key, value in tableOfConst.items():
         print(f'{value[1]}: {key} ({value[0]})')
