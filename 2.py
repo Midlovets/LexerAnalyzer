@@ -29,7 +29,7 @@ tokenTable = {
     "'":"punct", '"':'punct', '`':'punct', '->':'punct', '..':'punct',
 }
 
-# Токени за станами (відповідно до діаграми)
+# Токени за станами 
 tokStateTable = {
     2:'identifier',    # Стан 2 - ідентифікатори
     5:'real_const',    # Стан 5 - дійсні числа  
@@ -97,13 +97,9 @@ tableOfSymb = {}   # Таблиця символів програми
 state = initState
 FSuccess = ('Lexer', False)
 
-# Тестовий код
-sourceCode = '''fun main() {
-    val x: Int 
-    123x1 = 15 
-    var y = x * 2 
-    print("Result: $y")
-}'''
+
+with open('test.qirim', 'r', encoding='utf-8') as file:
+    sourceCode = file.read()
 
 lenCode = len(sourceCode)
 numLine = 1
