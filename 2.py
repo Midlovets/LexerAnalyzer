@@ -37,12 +37,12 @@ tokStateTable = {
     12:'string_const'  # Стан 12 - рядкові константи
 }
 
-# Діаграма станів точно відповідно до зображення
+# Діаграма станів - строго по диаграмме
 stf = {
     # З стану 0 (початковий)
     (0, 'Letter'): 1,    # Літери -> стан 1
     (0, 'Digit'): 3,     # Цифри -> стан 3
-    (0, '"'): 7,         # Лапки -> стан 7 (початок рядка)
+    (0, '"'): 10,        # Лапки -> стан 10 (початок рядка)
     (0, 'ws'): 0,        # Пробіли залишаються в стані 0
     (0, 'nl'): 0,        # Новий рядок теж залишається в стані 0
     (0, '.'): 4,         # Крапка -> стан 4
@@ -54,41 +54,44 @@ stf = {
     
     # Стан 3 - читання цілого числа
     (3, 'Digit'): 3,     # Цифри залишаються в стані 3
-    (3, 'dot'): 4,       # Крапка -> стан 4 (початок дробової частини)
-    (3, 'Letter'): 1,    # Літера після цифри -> ідентифікатор (123x)
+    (3, '.'): 4,         # Крапка -> стан 4 (початок дробової частини)
+    (3, 'Letter'): 101,  # Літера після цифри -> ПОМИЛКА!
     (3, 'other'): 6,     # Інше -> стан 6 (кінець цілого числа)
     
     # Стан 4 - після крапки
     (4, 'Digit'): 4,     # Цифри залишаються в стані 4
     (4, 'other'): 5,     # Інше -> стан 5 (кінець дійсного числа)
     
-    # Стан 7 - початок рядка
-    (7, '"'): 12,        # Закриваюча лапка -> стан 12 (кінець рядка)
-    (7, 'other'): 8,     # Інше -> стан 8 (читання рядка)
-    (7, 'nl'): 8,        # Новий рядок -> стан 8
-    (7, 'ws'): 8,        # Пробіли -> стан 8
+    # Стан 10 - початок рядка  
+    (10, '"'): 12,       # Закриваюча лапка -> стан 12 (кінець рядка)
+    (10, 'other'): 11,   # Інше -> стан 11 (читання рядка)
+    (10, 'nl'): 11,      # Новий рядок -> стан 11
+    (10, 'ws'): 11,      # Пробіли -> стан 11
     
-    # Стан 8 - читання рядка
-    (8, '"'): 12,        # Закриваюча лапка -> стан 12
-    (8, 'other'): 8,     # Інше залишається в стані 8
-    (8, 'nl'): 8,        # Новий рядок залишається в стані 8
-    (8, 'ws'): 8,        # Пробіли залишаються в стані 8
-    
-    # Спеціальні переходи для операторів
-    (0, '+'): 13, (0, '-'): 13, (0, '*'): 13, (0, '/'): 13, (0, '%'): 13,
-    (0, '('): 13, (0, ')'): 13, (0, '{'): 13, (0, '}'): 13,
-    (0, ','): 13, (0, ':'): 13, (0, ';'): 13, (0, '?'): 13,
-    (0, '='): 13, (0, '!'): 13, (0, '<'): 13, (0, '>'): 13,
-    (0, '&'): 13, (0, '|'): 13, (0, "'"): 13,
+    # Стан 11 - читання рядка
+    (11, '"'): 12,       # Закриваюча лапка -> стан 12
+    (11, 'other'): 11,   # Інше залишається в стані 11
+    (11, 'nl'): 11,      # Новий рядок залишається в стані 11
+    (11, 'ws'): 11,      # Пробіли залишаються в стані 11
     
     # Загальний перехід для помилок
     (0, 'other'): 101,
 }
 
-initState = 0   # стартовий стан
-F = {2, 5, 6, 12, 13, 101}  # фінальні стани
-Fstar = {2, 5, 6}   # стани зі зірочкою (відкат символу)
-Ferror = {101}      # стани помилок
+# Одиночные операторы сразу распознаются
+single_char_tokens = {
+    '+': 'add_op', '-': 'add_op',
+    '*': 'mult_op', '/': 'mult_op', '%': 'mult_op',
+    '(': 'brackets_op', ')': 'brackets_op', '{': 'brackets_op', '}': 'brackets_op',
+    ',': 'punct', ':': 'punct', ';': 'punct', '?': 'punct', "'": 'punct',
+    '=': 'assign_op', '!': 'logical_op', '<': 'rel_op', '>': 'rel_op',
+    '&': 'logical_op', '|': 'logical_op'
+}
+
+initState = 0   # стартовый стан
+F = {2, 5, 6, 12, 101}  # фінальні стани СТРОГО по диаграмме
+Fstar = {2, 5, 6}       # стани зі зірочкою (відкат символу)
+Ferror = {101}          # стани помилок
 
 tableOfId = {}     # Таблиця ідентифікаторів
 tableOfConst = {}  # Таблиця констант
@@ -97,7 +100,7 @@ tableOfSymb = {}   # Таблиця символів програми
 state = initState
 FSuccess = ('Lexer', False)
 
-
+# Читаем существующий файл test.qirim
 with open('test.qirim', 'r', encoding='utf-8') as file:
     sourceCode = file.read()
 
@@ -122,6 +125,15 @@ def lex():
                 
             # Пропускаємо пробіли, коли не в рядку
             if classCh == 'ws' and state == 0:
+                continue
+            
+            # Специальная обработка одиночных операторов
+            if state == 0 and char in single_char_tokens:
+                lexeme = char
+                token = single_char_tokens[char]
+                print('{0:<3d} {1:<15s} {2:<15s}'.format(numLine, lexeme, token))
+                tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, '')
+                lexeme = ''
                 continue
                 
             state = nextState(state, classCh)
@@ -173,14 +185,6 @@ def processing():
         if state in Fstar:
             numChar = putCharBack(numChar)
         state = initState
-        
-    elif state == 13:  # оператори
-        lexeme += char
-        token = getToken(state, lexeme)
-        print('{0:<3d} {1:<15s} {2:<15s}'.format(numLine, lexeme, token))
-        tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, '')
-        lexeme = ''
-        state = initState
 
 def fail():
     """Обробка помилок"""
@@ -190,8 +194,10 @@ def fail():
     if state == 101:
         print(f'{numLine:<3d} {lexeme:<15s} {"UNKNOWN":<15s} {"ERROR":<5s}')
         
-        # Перевірка на кирилицю
-        if is_cyrillic(char):
+        # Специальная обработка для чисел с буквами
+        if lexeme and lexeme[0].isdigit() and any(c.isalpha() for c in lexeme):
+            print(f'Лексер: у рядку {numLine} ідентифікатор не може починатися з цифр')
+        elif is_cyrillic(char):
             print(f'Лексер: у рядку {numLine} неочікуваний символ кирилиці "{char}" (підтримуються лише латинські літери)')
         elif char == '@':
             print(f'Лексер: у рядку {numLine} неочікуваний символ "{char}" (символ @ не підтримується)')
@@ -237,7 +243,7 @@ def putCharBack(numChar):
 def classOfChar(char):
     """Визначення класу символу"""
     if char == '.':
-        return "dot"
+        return "."
     elif char.isalpha() and not is_cyrillic(char):  # Тільки латинські літери
         return "Letter"
     elif is_cyrillic(char):  # Кирилиця - помилка
@@ -266,19 +272,18 @@ def getToken(state, lexeme):
     return 'unknown'
 
 def indexIdConst(state, lexeme):
-    """Отримання індексу ідентифікатора або константи"""
-    indx = 0
-    if state == 2:  # ідентифікатор
-        indx = tableOfId.get(lexeme)
-        if indx is None:
-            indx = len(tableOfId) + 1
-            tableOfId[lexeme] = indx
-    if state in (5, 6, 12):  # константи
-        indx = tableOfConst.get(lexeme)
-        if indx is None:
-            indx = len(tableOfConst) + 1
-            tableOfConst[lexeme] = (tokStateTable[state], indx)
-    return indx
+    """ПРАВИЛЬНАЯ функция индексации"""
+    if state == 2:  # ідентифікатор - состояние 2
+        if lexeme not in tableOfId:
+            tableOfId[lexeme] = len(tableOfId) + 1
+        return tableOfId[lexeme]
+    
+    elif state in (5, 6, 12):  # константи - состояния 5, 6, 12
+        if lexeme not in tableOfConst:
+            tableOfConst[lexeme] = len(tableOfConst) + 1
+        return tableOfConst[lexeme]
+    
+    return 0
 
 # Запуск аналізатора
 print("=== ЛЕКСИЧНИЙ АНАЛІЗ ПРОГРАМИ НА МОВІ QIRIM ===")
@@ -303,7 +308,7 @@ if FSuccess[1]:
         
     print('\nТаблиця констант:')
     for key, value in tableOfConst.items():
-        print(f'{value[1]}: {key} ({value[0]})')
+        print(f'{value}: {key}')
 else:
     print('\n' + '=' * 60)
     print('АНАЛІЗ ЗАВЕРШЕНО З ПОМИЛКОЮ!')
