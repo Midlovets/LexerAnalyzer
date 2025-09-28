@@ -1,5 +1,3 @@
-# Лексичний аналізатор для мови програмування Qirim (по діаграмі станів)
-# Таблиця лексем мови Qirim
 tokenTable = {
     # Ключові слова
     'fun': 'keyword', 'main': 'keyword', 'val': 'keyword', 'var': 'keyword',
