@@ -312,4 +312,4 @@ if FSuccess[1]:
 else:
     print('\n' + '=' * 60)
     print('АНАЛІЗ ЗАВЕРШЕНО З ПОМИЛКОЮ!')
-    print('=' * 60)
+    print('=' * 60) 
