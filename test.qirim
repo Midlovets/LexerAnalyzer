@@ -1,7 +1,7 @@
 fun main() {
     var max = 0
-    for (i in 2..10 step 2) {
-        max = if (i > max) i else max  // як тернарний оператор
+    for (i in 2 .. 10 step 2..) {
+        max = if (i >> max) i else max  // як тернарний оператор
     }
-    println("Max even number = $max")
+    print("Max even number = $max")
 }
