@@ -54,7 +54,7 @@ stf = {
     (0, '>'): 28,
     (0, '/'): 31,
     (0, '-'): 35,
-    (0, '.'): 38,
+    (0, '.'): 39,
 
     (1, 'Letter'): 1, (1, 'Digit'): 1, (1, '_'): 1,
     (1, 'other'): 2,
@@ -63,8 +63,8 @@ stf = {
     (3, '.'): 4,
     (3, 'other'): 6,
 
-    (4, 'Digit'): 4,
-    (4, 'other'): 5,
+    (4, 'Digit'): 26,
+    (4, '.'): 38,
 
     (7, 'Letter'): 8, (7, 'Digit'): 8, (7, 'other'): 8,
     (7, 'nl'): 104, (7, '`'): 104,
@@ -73,7 +73,7 @@ stf = {
     (8, '`'): 9,
     (8, 'nl'): 104,
 
-    (10, 'other'): 10, (10, 'nl'): 10, (10, 'ws'): 10,
+    (10, 'other'): 10, (10, 'nl'): 104, (10, 'ws'): 10,
     (10, '"'): 11,
 
     (12, 'other'): 13,
@@ -91,6 +91,10 @@ stf = {
     (23, '='): 24,
     (23, 'other'): 25,
 
+    (26, 'Digit'): 26,
+    (26, '.'): 26,
+    (26, 'other'): 5,
+
     (28, 'other'): 29,
     (28, '='): 30,
 
@@ -103,15 +107,16 @@ stf = {
     (33, 'Letter'): 33, (33, 'Digit'): 33, (33, 'other'): 33,
     (33, 'nl'): 34,
 
-    (38, '.'): 39,
-    (38, 'other'): 105,
+    (39, '.'): 40,
+    (39, 'Digit'): 26,
+    (39, 'other'): 105,
 
     (0, 'other'): 101,
 }
 
 initState = 0
 # F - всі фінальні стани
-F = {2, 5, 6, 9, 11, 13, 14, 15, 17, 18, 20, 22, 24, 25, 26, 27, 29, 30, 32, 34, 36, 37, 39, 101, 102, 103, 104, 105}
+F = {2, 5, 6, 9, 11, 13, 14, 15, 17, 18, 20, 22, 24, 25, 27, 29, 30, 32, 34, 36, 37, 38, 40, 101, 102, 103, 104, 105}
 # Fstar - фінальні стани, де останній символ має бути повернений назад
 Fstar = {2, 5, 6, 13, 18, 25, 29, 32, 36}
 Ferror = {101, 102, 103, 104, 105}
@@ -123,6 +128,7 @@ tableOfSymb = {}
 state = initState
 FSuccess = ('Lexer', False)
 statusMessage = ''
+lexemeStartLine = 1
 
 with open('test.qirim', 'r', encoding='utf-8') as file:
     sourceCode = file.read()
@@ -135,74 +141,64 @@ lexeme = ''
 
 
 def lex():
-    global state, numLine, char, lexeme, numChar, FSuccess, statusMessage
-
-    try:
-        while numChar < lenCode - 1:
-            char = next_char()
-            class_ch = class_of_char(char)
-            if class_ch == 'nl':
-                if state == initState:
-                    numLine += 1
-                    continue
-                if state in (10, 33):
-                    numLine += 1
-            if class_ch == 'ws' and state == initState:
-                continue
-            state = next_state(state, class_ch)
-            if state in Ferror:
-                lexeme += char
-                fail()
-                return
-            if is_final(state):
-                if state in Fstar:
-                    processing()
-                else:
-                    lexeme += char
-                    processing()
-                continue
+    global state, numLine, char, lexeme, numChar, FSuccess, statusMessage, lexemeStartLine
+    while numChar < lenCode - 1:
+        char = next_char()
+        class_ch = class_of_char(char)
+        if class_ch == 'nl':
             if state == initState:
-                lexeme = ''
+                numLine += 1
+                continue
+            if state in (10, 33):
+                numLine += 1
+        if class_ch == 'ws' and state == initState:
+            continue
+        prev_state = state
+        state = next_state(state, class_ch)
+        if prev_state == initState and state != initState:
+            lexemeStartLine = numLine
+        if state in Ferror:
+            lexeme += char
+            if prev_state == 10 and state == 104:
+                token = 'string_const'
+                index = index_id_const(11, lexeme[:-1])
+                tableOfSymb[len(tableOfSymb) + 1] = (lexemeStartLine, lexeme[:-1], token, index)
+                statusMessage = f"\nАВАРІЙНЕ ЗАВЕРШЕННЯ ПРОГРАМИ! Незавершена лексема у рядку {lexemeStartLine}."
+                FSuccess = ('Lexer', False)
+                return
+            fail()
+            return
+        if is_final(state):
+            if state in Fstar:
+                processing()
             else:
                 lexeme += char
-        # Тут переглянути помилку
-        if state != initState and not is_final(state):
-            statusMessage = f"\nАварійне завершення програми: незавершена лексема у рядку {numLine}: \"{lexeme}\""
-            FSuccess = ('Lexer', False)
-            return
-
-        statusMessage = '\nЛексичний аналіз завершено успішно!\n'
-        FSuccess = ('Lexer', True)
-    except SystemExit as e:
-        statusMessage = f'\nАварійне завершення програми з кодом {e}\n'
-        FSuccess = ('Lexer', False)
+                processing()
+            continue
+        if state == initState:
+            lexeme = ''
+        else:
+            lexeme += char
+    statusMessage = '\nЛексичний аналіз завершено успішно!\n'
+    FSuccess = ('Lexer', True)
 
 
 def processing():
     global state, lexeme, char, numLine, numChar, tableOfSymb
-
     if not lexeme:
         state = initState
         return
-    # Спеціальна обробка для оператора діапазону .. після цілого числа
-    if state == 26 and lexeme.endswith('..') and len(lexeme) > 2:
+    if state == 38 and lexeme.endswith('..') and len(lexeme) > 2:
         left = lexeme[:-2]
-        if left.isdigit():
-            token = 'int_const'
-            index = index_id_const(6, left)
+        if left.replace('.', '', 1).isdigit():
+            if '.' in left:
+                token = 'real_const'
+                index = index_id_const(5, left)
+            else:
+                token = 'int_const'
+                index = index_id_const(6, left)
             tableOfSymb[len(tableOfSymb) + 1] = (numLine, left, token, index)
             numChar = put_char_back(put_char_back(numChar))
-            lexeme = ''
-            state = initState
-            return
-    if state == 5 and lexeme.endswith('.'):
-        left = lexeme[:-1]
-        if left.isdigit():
-            token = 'int_const'
-            index = index_id_const(6, left)
-            tableOfSymb[len(tableOfSymb) + 1] = (numLine, left, token, index)
-            numChar = put_char_back(numChar)
-            numChar = put_char_back(numChar)
             lexeme = ''
             state = initState
             return
@@ -236,16 +232,26 @@ def fail():
     global state, numLine, char, lexeme, FSuccess, statusMessage
     FSuccess = ('Lexer', False)
     tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, 'UNKNOWN', 'ERROR')
+    # Помилки з кодом 102–105
+    if state == 102:
+        statusMessage = f'\nПОМИЛКА! У рядку {numLine} очікувався &&.'
+        return
+    if state == 103:
+        statusMessage = f'\nПОМИЛКА! У рядку {numLine} очікувався ||.'
+        return
+    if state == 104:
+        statusMessage = f'\nПОМИЛКА! У рядку {numLine} неправильне оголошення ідентифікатора у зворотних лапках.'
+        return
+    if state == 105:
+        statusMessage = f'\nПОМИЛКА! У рядку {numLine} очікувалось .. або число.'
+        return
+    # Загальна помилка з кодом 101
     if lexeme and lexeme[0].isdigit() and any(c.isalpha() for c in lexeme):
-        statusMessage = f'\nЛексер: у рядку {numLine} ідентифікатор не може починатися з цифр.'
+        statusMessage = f'\nПОМИЛКА! У рядку {numLine} після крапки МОЖЕ йти тільки цифра або крапка.'
     elif is_cyrillic(char):
-        statusMessage = f'\nЛексер: у рядку {numLine} неочікуваний символ кирилиці "{char}".'
-    elif char == '@':
-        statusMessage = f'\nЛексер: у рядку {numLine} неочікуваний символ "{char}".'
-    elif char in '#$%^&~':
-        statusMessage = f'\nЛексер: у рядку {numLine} неочікуваний символ "{char}".'
+        statusMessage = f'\nПОМИЛКА! У рядку {numLine} неочікуваний символ кирилиці "{char}".'
     else:
-        statusMessage = f'\nЛексер: у рядку {numLine} неочікуваний символ "{char}".'
+        statusMessage = f'\nПОМИЛКА! У рядку {numLine} неочікуваний символ "{char}".'
 
 
 def is_cyrillic(character):
@@ -260,18 +266,13 @@ def next_state(state, class_ch):
     try:
         return stf[(state, class_ch)]
     except KeyError:
-        if (state, 'other') in stf:
-            return stf[(state, 'other')]
-        else:
-            return 101
+        return stf[(state, 'other')]
 
 
 def next_char():
     global numChar
     numChar += 1
-    if numChar < len(sourceCode):
-        return sourceCode[numChar]
-    return ''
+    return sourceCode[numChar]
 
 
 def put_char_back(cur_num_char):
@@ -316,13 +317,21 @@ def index_id_const(state, lexeme):
         if lexeme not in tableOfId:
             tableOfId[lexeme] = len(tableOfId) + 1
         return tableOfId[lexeme]
-
     elif state in (5, 6, 11, 12):
         if lexeme not in tableOfConst:
             tableOfConst[lexeme] = len(tableOfConst) + 1
         return tableOfConst[lexeme]
-
     return 0
+
+
+def _fmt_cell_lexeme(text, max_len=60):
+    s = '' if text is None else str(text)
+    if '\n' in s or '\r' in s:
+        s = s.splitlines()[0]
+    s = s.replace('\t', ' ')
+    if len(s) > max_len:
+        return s[:max_len - 1] + '…'
+    return s
 
 
 if __name__ == '__main__':
@@ -332,7 +341,7 @@ if __name__ == '__main__':
     main_tbl = PrettyTable()
     main_tbl.field_names = ["Рядок", "Лексема", "Токен", "Індекс"]
     for _, (ln, lex, tok, idx) in tableOfSymb.items():
-        main_tbl.add_row([ln, lex, tok, idx])
+        main_tbl.add_row([ln, _fmt_cell_lexeme(lex), tok, idx])
     print(main_tbl)
     print(statusMessage)
     if FSuccess[1]:
@@ -341,20 +350,20 @@ if __name__ == '__main__':
         symb = PrettyTable()
         symb.field_names = ["№", "Лексема", "Токен", "Індекс"]
         for key, (ln, lex, tok, idx) in tableOfSymb.items():
-            symb.add_row([key, lex, tok, idx])
+            symb.add_row([key, _fmt_cell_lexeme(lex), tok, idx])
         print('Таблиця символів програми:')
         print(symb)
 
         ids = PrettyTable()
         ids.field_names = ["Індекс", "Ідентифікатор"]
         for lex, idx in sorted(tableOfId.items(), key=lambda x: x[1]):
-            ids.add_row([idx, lex])
+            ids.add_row([idx, _fmt_cell_lexeme(lex)])
         print('\nТаблиця ідентифікаторів:')
         print(ids)
 
         consts = PrettyTable()
         consts.field_names = ["Індекс", "Константа"]
         for lex, idx in sorted(tableOfConst.items(), key=lambda x: x[1]):
-            consts.add_row([idx, lex])
+            consts.add_row([idx, _fmt_cell_lexeme(lex)])
         print('\nТаблиця констант:')
         print(consts)
