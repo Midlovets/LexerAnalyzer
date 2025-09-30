@@ -65,6 +65,7 @@ stf = {
 
     (4, 'Digit'): 26,
     (4, '.'): 38,
+    (4, 'other'): 105,
 
     (7, 'Letter'): 8, (7, 'Digit'): 8, (7, 'other'): 8,
     (7, 'nl'): 104, (7, '`'): 104,
@@ -92,7 +93,6 @@ stf = {
     (23, 'other'): 25,
 
     (26, 'Digit'): 26,
-    (26, '.'): 26,
     (26, 'other'): 5,
 
     (28, 'other'): 29,
@@ -173,6 +173,15 @@ def lex():
                 processing()
             else:
                 lexeme += char
+                if state == 26 and char == '.':
+                    lexeme = lexeme[:-1]
+                    token = 'real_const'
+                    index = index_id_const(5, lexeme)
+                    tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, index)
+                    numChar = put_char_back(numChar)
+                    state = initState
+                    lexeme = ''
+                    continue
                 processing()
             continue
         if state == initState:
@@ -188,6 +197,16 @@ def processing():
     if not lexeme:
         state = initState
         return
+    if state == 5 and lexeme.endswith('..') and len(lexeme) > 2:
+        left = lexeme[:-2]
+        if left.replace('.', '', 1).isdigit():
+            token = 'real_const' if '.' in left else 'int_const'
+            index = index_id_const(5 if token == 'real_const' else 6, left)
+            tableOfSymb[len(tableOfSymb) + 1] = (numLine, left, token, index)
+            numChar = put_char_back(put_char_back(numChar))
+            lexeme = ''
+            state = initState
+            return
     if state == 38 and lexeme.endswith('..') and len(lexeme) > 2:
         left = lexeme[:-2]
         if left.replace('.', '', 1).isdigit():
