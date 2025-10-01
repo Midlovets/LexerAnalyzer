@@ -19,12 +19,12 @@ tokenTable = {
     '&&': 'logical_op', '||': 'logical_op', '!': 'logical_op',
 
     '(': 'brackets_op', ')': 'brackets_op', '{': 'brackets_op', '}': 'brackets_op',
-    '.': 'punct', ',': 'punct', ':': 'punct', ';': 'punct', '?': 'punct',
-    "'": "punct", '"': 'punct', '`': 'punct', '->': 'punct', '..': 'punct',
+    '.': 'punct', ',': 'punct', ':': 'punct', ';': 'punct', '?': 'punct', '"': 'punct', '`': 'punct', '->': 'punct',
+    '..': 'punct',
 
     ' ': 'ws', '\t': 'ws', '\f': 'ws',
 
-    '\n': 'nl', '\r': 'nl', '\r\n': 'nl',
+    '\n': 'nl', '\r': 'nl',
 }
 
 tokStateTable = {

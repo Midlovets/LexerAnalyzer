@@ -1,7 +1,79 @@
-fun main() {
-    var `max` = 0
-    for (i in 2.. step 2) {
-        max = if (i >> max) i else max  // як тернарний оператор
+//fun main() {
+    val x: Int = 5
+    var y: Real = 3.5
+    val s: String = "Hello"
+    var flag: Boolean = true
+    val unitVal: Unit = Unit
+    if (x > 0 && flag || !false) {
+        print("positive\n")
+    } else {
+        print("negative\n")
     }
-    print("Max even number = $max")
+
+    when (x) {
+        1 -> print("one\n")
+        2, 3 -> print("two or three\n")
+        in 4..10 -> print("from 4 to 10\n")
+        !in 11..20 -> print("not in 11..20\n")
+        else -> print("other\n")
+    }
+
+    for (i in 1..10 step 2) {
+        print("$i,")
+    }
+    print("\n")
+
+    for (j in 5 downTo 1) {
+        print("$j;")
+    }
+    print("\n")
+
+    var k = 0
+    do {
+        k += 1
+    } while (k < 3)
+
+    val res = myFun(2, 3)
+    print("myFun = $res\n")
+
+    for (i in 1..10) {
+        if (i == 3) continue
+        if (i == 7) break
+        print("$i ")
+    }
+    print("\n")
+
+    if (s is String) {
+        print("s is String\n")
+    }
+
+    print("Enter a number: ")
+    val input: String? = readLine()
+    print("You entered: $input\n")
+
+    var a = 2 + 3 - 1
+    a = a * 4 / 2 % 3
+    val exp = 2 ** 3
+    print("exp = $exp\n")
+
+    if (a == 1 || a != 2 || a < 3 || a > 0 || a <= 5 || a >= -1) {
+        print("rel_ops work\n")
+    }
+
+    val c: Char = "c"
+    val quoted: String = "quoted"
+    val backtick = `fun`()
+    print("backtick = $backtick\n")
+
+    val maybe: String? = null
+    val safe = maybe ?: "default"
+    print("safe = $safe\n")
+}
+
+fun myFun(a: Int, b: Int): Int {
+    return a + b
+}
+
+fun `fun`(): Int {
+    return 42
 }
