@@ -1,6 +1,13 @@
 fun main() {
-    val x: Int
-    x = 15
-    var 123hello = x * 2
-    print("Result: $y")
+    var n = 1
+    while (n <= 5) {
+        when (n) {
+            1 -> print("One")
+            2 -> print("Two")
+            3 -> print("Three")
+            4 -> print("Four")
+            5 -> print("Five")
+        }
+        n = n + 1
+    }
 }
