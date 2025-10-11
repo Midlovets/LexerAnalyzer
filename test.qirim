@@ -1,9 +1,10 @@
-//fun main() {
+fun main() {
     val x: Int = 5
-    var y: Real = 3.5
+    var y: Real = 3.14
     val s: String = "Hello"
     var flag: Boolean = true
     val unitVal: Unit = Unit
+
     if (x > 0 && flag || !false) {
         print("positive\n")
     } else {
@@ -19,27 +20,32 @@
     }
 
     for (i in 1..10 step 2) {
-        print("$i,")
+        print(i)
+        print(",")
     }
     print("\n")
 
     for (j in 5 downTo 1) {
-        print("$j;")
+        print(j)
+        print(";")
     }
     print("\n")
 
     var k = 0
     do {
-        k += 1
+        k = k + 1
     } while (k < 3)
 
-    val res = myFun(2, 3)
-    print("myFun = $res\n")
+    val res: Int = myFun(2, 3)
+    print("myFun = ")
+    print(res)
+    print("\n")
 
     for (i in 1..10) {
         if (i == 3) continue
         if (i == 7) break
-        print("$i ")
+        print(i)
+        print(" ")
     }
     print("\n")
 
@@ -48,26 +54,35 @@
     }
 
     print("Enter a number: ")
-    val input: String? = readLine()
-    print("You entered: $input\n")
+    val input: String = readLine()
+    print("You entered: ")
+    print(input)
+    print("\n")
 
-    var a = 2 + 3 - 1
+    var a: Int = 2 + 3 - 1
     a = a * 4 / 2 % 3
-    val exp = 2 ** 3
-    print("exp = $exp\n")
+    val exp: Int = 2 ** 3
+    print("exp = ")
+    print(exp)
+    print("\n")
 
     if (a == 1 || a != 2 || a < 3 || a > 0 || a <= 5 || a >= -1) {
         print("rel_ops work\n")
     }
 
-    val c: Char = "c"
     val quoted: String = "quoted"
-    val backtick = `fun`()
-    print("backtick = $backtick\n")
+    val backtick: Int = `fun`()
+    print("backtick = ")
+    print(backtick)
+    print("\n")
 
-    val maybe: String? = null
-    val safe = maybe ?: "default"
-    print("safe = $safe\n")
+    val maybe: String = "some"
+    val safe: String = maybe
+    print("safe = ")
+    print(safe)
+    print("\n")
+
+    print("All tokens tested!\n")
 }
 
 fun myFun(a: Int, b: Int): Int {
