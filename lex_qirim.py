@@ -3,9 +3,8 @@ from prettytable import PrettyTable
 tokenTable = {
     'fun': 'keyword', 'main': 'keyword', 'val': 'keyword', 'var': 'keyword',
     'if': 'keyword', 'else': 'keyword', 'when': 'keyword', 'for': 'keyword',
-    'do': 'keyword', 'while': 'keyword', 'return': 'keyword', 'continue': 'keyword',
-    'break': 'keyword', 'is': 'keyword', 'in': 'keyword', 'downTo': 'keyword',
-    'step': 'keyword', 'readLine': 'keyword', 'print': 'keyword',
+    'do': 'keyword', 'while': 'keyword', 'return': 'keyword', 'in': 'keyword',
+    'downTo': 'keyword', 'step': 'keyword', 'readLine': 'keyword', 'print': 'keyword',
 
     'Int': 'type', 'Real': 'type', 'String': 'type', 'Boolean': 'type', 'Unit': 'type',
 

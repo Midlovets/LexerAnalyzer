@@ -1,37 +1,49 @@
+fun hello(name: String) {
+    print("Hello, $name")
+}
+
+fun myFun(a: Int, b: Int): Int = a + b
+
+fun `fun`(): Int {
+    return 0
+}
+
 fun main() {
     val x: Int = 5
     var y: Real = 3.14
     val s: String = "Hello"
     var flag: Boolean = true
-    val unitVal: Unit = Unit
+    val name: String = "Valeriia"
+
+    hello(name)
 
     if (x > 0 && flag || !false) {
-        print("positive\n")
+        print("positive")
     } else {
-        print("negative\n")
+        print("negative")
     }
 
     when (x) {
-        1 -> print("one\n")
-        2, 3 -> print("two or three\n")
-        in 4..10 -> print("from 4 to 10\n")
-        !in 11..20 -> print("not in 11..20\n")
-        else -> print("other\n")
+        1 -> print("one")
+        2, 3 -> print("two or three")
+        4 -> print("four")
+        5 -> print("five")
+        else -> print("other")
     }
 
-    for (i in 1..10 step 2) {
+    for (i in 1..10) {
         print(i)
         print(",")
     }
     print("\n")
 
-    for (j in 5 downTo 1) {
+    for (j in 5 downTo 1 step 1) {
         print(j)
         print(";")
     }
     print("\n")
 
-    var k = 0
+    var k: Int = 0
     do {
         k = k + 1
     } while (k < 3)
@@ -41,17 +53,9 @@ fun main() {
     print(res)
     print("\n")
 
-    for (i in 1..10) {
-        if (i == 3) continue
-        if (i == 7) break
-        print(i)
-        print(" ")
-    }
+    val message: String = if (res > 4) "Result is large" else "Result is small"
+    print(message)
     print("\n")
-
-    if (s is String) {
-        print("s is String\n")
-    }
 
     print("Enter a number: ")
     val input: String = readLine()
@@ -67,8 +71,9 @@ fun main() {
     print("\n")
 
     if (a == 1 || a != 2 || a < 3 || a > 0 || a <= 5 || a >= -1) {
-        print("rel_ops work\n")
+        print("rel_ops work")
     }
+    print("\n")
 
     val quoted: String = "quoted"
     val backtick: Int = `fun`()
@@ -82,13 +87,5 @@ fun main() {
     print(safe)
     print("\n")
 
-    print("All tokens tested!\n")
-}
-
-fun myFun(a: Int, b: Int): Int {
-    return a + b
-}
-
-fun `fun`(): Int {
-    return 42
+    print("All tokens tested!")
 }
