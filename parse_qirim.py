@@ -321,6 +321,7 @@ def parse_variable_declarations():
     global numRow
     indent = next_ident()
     print(f"{indent}parse_variable_declarations():")
+    first_decl_line, _, _ = get_symb()
     parse_variable_declaration()
     while True:
         numLine, lex, tok = get_symb()
@@ -328,10 +329,17 @@ def parse_variable_declarations():
             numRow += 1
             numLine, lex, tok = get_symb()
             if lex in ("val", "var") and tok == "keyword":
-                parse_variable_declaration()
+                if numLine == first_decl_line:
+                    parse_variable_declaration()
+                else:
+                    numRow -= 1
+                    break
             else:
                 break
         else:
+            if lex in ("val", "var") and tok == "keyword" and numLine == first_decl_line:
+                fail_parse("несумісність токенів",
+                           (numLine, lex, tok, ";", "punct - між оголошеннями в одному рядку потрібна крапка з комою"))
             break
     prev_ident()
     return True
