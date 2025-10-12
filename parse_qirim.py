@@ -244,7 +244,7 @@ def parse_return_type():
         print(f"{indent}Тип повернення: {lex}")
         numRow += 1
     else:
-        fail_parse("несумісність токенів", (numLine, lex, tok, "type or Unit", "type"))
+        fail_parse("несумісність токенів", (numLine, lex, tok, "type або Unit", "type"))
     prev_ident()
     return True
 
@@ -265,7 +265,6 @@ def parse_function_body():
     return True
 
 
-# Перевірити цю функцію
 def parse_block(is_function_block=False, function_name=None):
     global numRow
     indent = next_ident()
@@ -462,7 +461,7 @@ def parse_statement(is_function_block=False, function_name=None):
             prev_ident()
             return True
         else:
-            print(f"Parser ERROR: Неочікуваний токен '{lex}' типу '{tok}' на рядку {numLine}.")
+            print(f"Parser ERROR: Неочікуваний токен '{lex}' типу '{tok}' в рядку {numLine}.")
             exit(1014)
         prev_ident()
         return False

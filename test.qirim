@@ -81,8 +81,7 @@ fun main() {
     print(backtick)
     print("\n")
 
-    val maybe: String = "some"
-    val safe: String = maybe
+    val safe: String = "some"
     print("safe = ")
     print(safe)
     print("\n")
