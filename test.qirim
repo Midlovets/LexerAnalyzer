@@ -9,8 +9,7 @@ fun `fun`(): Int {
 }
 
 fun main() {
-    val x: Int = 5
-    var y: Real = 3.14
+    val x: Int = 5; var y: Real = 3.14
     val s: String = "Hello"
     var flag: Boolean = true
     val name: String = "Valeriia"
