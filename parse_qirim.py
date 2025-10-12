@@ -380,11 +380,9 @@ def parse_declaration():
 
 
 def parse_statement_section(is_function_block=False, function_name=None):
-    """StatementSection = Statement { ';' Statement }"""
     global numRow
     indent = next_ident()
-    trace(f'{indent}parse_statement_section():')
-
+    trace(f"{indent}parse_statement_section():")
     while True:
         if numRow > len_tableOfSymb:
             if is_function_block:
@@ -401,7 +399,6 @@ def parse_statement_section(is_function_block=False, function_name=None):
             continue
         if not parse_statement(is_function_block, function_name):
             break
-
     prev_ident()
     return True
 
@@ -453,9 +450,7 @@ def parse_statement(is_function_block=False, function_name=None):
                            (numLine, lex, tok, "val, var, = або (", "keyword, assign_op або brackets_op"))
         else:
             fail_parse("неочікуваний кінець програми", numRow)
-
     else:
-        # Allow variable declarations anywhere inside function bodies
         if tok == 'keyword' and lex in ('var', 'val'):
             parse_variable_declarations()
             prev_ident()
