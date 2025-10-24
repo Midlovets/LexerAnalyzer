@@ -3,9 +3,8 @@ from prettytable import PrettyTable
 tokenTable = {
     'fun': 'keyword', 'main': 'keyword', 'val': 'keyword', 'var': 'keyword',
     'if': 'keyword', 'else': 'keyword', 'when': 'keyword', 'for': 'keyword',
-    'do': 'keyword', 'while': 'keyword', 'return': 'keyword', 'continue': 'keyword',
-    'break': 'keyword', 'is': 'keyword', 'in': 'keyword', 'downTo': 'keyword',
-    'step': 'keyword', 'readLine': 'keyword', 'print': 'keyword',
+    'do': 'keyword', 'while': 'keyword', 'return': 'keyword', 'in': 'keyword',
+    'downTo': 'keyword', 'step': 'keyword', 'readLine': 'keyword', 'print': 'keyword',
 
     'Int': 'type', 'Real': 'type', 'String': 'type', 'Boolean': 'type', 'Unit': 'type',
 
@@ -19,12 +18,12 @@ tokenTable = {
     '&&': 'logical_op', '||': 'logical_op', '!': 'logical_op',
 
     '(': 'brackets_op', ')': 'brackets_op', '{': 'brackets_op', '}': 'brackets_op',
-    '.': 'punct', ',': 'punct', ':': 'punct', ';': 'punct', '?': 'punct',
-    "'": "punct", '"': 'punct', '`': 'punct', '->': 'punct', '..': 'punct',
+    '.': 'punct', ',': 'punct', ':': 'punct', ';': 'punct', '?': 'punct', '"': 'punct', '`': 'punct', '->': 'punct',
+    '..': 'punct',
 
     ' ': 'ws', '\t': 'ws', '\f': 'ws',
 
-    '\n': 'nl', '\r': 'nl', '\r\n': 'nl',
+    '\n': 'nl', '\r': 'nl',
 }
 
 tokStateTable = {

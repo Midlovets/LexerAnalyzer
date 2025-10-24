@@ -1,13 +1,8 @@
+
+fun foo(a: Int) {
+
+}
+
 fun main() {
-    var n = 1
-    while (n <= 5) {
-        when (n) {
-            1 -> print("One")
-            2 -> print("Two")
-            3 -> print("Three")
-            4 -> print("Four")
-            5 -> print("Five")
-        }
-        n = n + 1
-    }
+    foo("abc");
 }
