@@ -313,11 +313,14 @@ def parse_main_function():
     indent = next_ident()
     print(f"{indent}parse_main_function():")
     currentFunction = 'main'
+
+    start_line, _, _ = get_symb()
+
     parse_token("fun", "keyword")
     parse_token("main", "keyword")
     parse_token("(", "brackets_op")
     parse_token(")", "brackets_op")
-    add_func_to_table('main', [], 'Unit', numRow - 3)
+    add_func_to_table('main', [], 'Unit', start_line)
     parse_block(is_function_block=True, function_name="main")
     currentFunction = None
     prev_ident()
@@ -461,20 +464,39 @@ def parse_block(is_function_block=False, function_name=None):
     global numRow
     indent = next_ident()
     print(f"{indent}parse_block():")
+
+    start_line, _, _ = get_symb()
     parse_token("{", "brackets_op")
+
+    has_return_statement = False
+    last_line_before_brace = start_line
+
     while True:
         if numRow > len_tableOfSymb:
             if is_function_block:
-                print(f"Parser ERROR: Незакрита функція {function_name if function_name else ""}")
+                print(
+                    f"Parser ERROR: Незакрита функція {function_name if function_name else ""} (блок почався у рядку {start_line})")
                 exit(1010)
             else:
-                print("ПОМИЛКА! Очікувався: '}'.")
+                print(f"ПОМИЛКА! Очікувався: '}}'. Блок почався у рядку {start_line}.")
                 exit(1009)
-        numLine, lex, tok = get_symb()
-        if lex == "}" and tok == "brackets_op":
+
+        current_line, _, _ = get_symb()
+        if current_line > last_line_before_brace:
+            last_line_before_brace = current_line
+
+        statement_type = parse_function_statement(is_function_block, function_name)
+
+        if statement_type == 'return':
+            has_return_statement = True
+        elif statement_type == 'end_of_block':
             break
-        if not parse_function_statement(is_function_block, function_name):
-            break
+
+    if is_function_block and function_name and function_name in tableOfFunc:
+        expected_type = tableOfFunc[function_name]['return_type']
+        if expected_type != 'Unit' and not has_return_statement:
+            fail_semantic("відсутній return у функції", (last_line_before_brace, function_name, expected_type))
+
     parse_token("}", "brackets_op")
     prev_ident()
     return True
@@ -491,21 +513,29 @@ def parse_function_statement(is_function_block=False, function_name=None):
         else:
             print("ПОМИЛКА! Очікувався: '}'.")
             exit(1009)
+
     numLine, lex, tok = get_symb()
+
     if is_function_block and lex == "fun" and tok == "keyword":
-        print(f"Parser ERROR: Вкладене оголошення функції у тілі функції '{function_name if function_name else ''}' не дозволено.")
+        print(
+            f"Parser ERROR: Вкладене оголошення функції у тілі функції '{function_name if function_name else ''}' не дозволено.")
         exit(1011)
+
     if lex == "}" and tok == "brackets_op":
         prev_ident()
-        return False
+        return 'end_of_block'
+
+    result = 'other_statement'
     if lex in ("val", "var") and tok == "keyword":
         parse_variable_declarations()
+        result = 'variable_declaration'
     elif lex == "return" and tok == "keyword":
-        parse_return_statement()
+        result = parse_return_statement()
     else:
         parse_statement_section(is_function_block, function_name)
+
     prev_ident()
-    return True
+    return result
 
 
 def parse_variable_declarations():
@@ -1366,7 +1396,30 @@ def parse_if_expression():
     return result_type
 
 
-# Головна частина програми
+def parse_return_statement():
+    global numRow, currentFunction
+    indent = next_ident()
+    print(f"{indent}parse_return_statement():")
+    parse_token("return", "keyword")
+    numLine, lex, tok = get_symb()
+
+    return_type = None
+    if lex not in ("}", ";"):
+        return_type = parse_expression()
+    else:
+        return_type = 'Unit'
+
+    if currentFunction and currentFunction in tableOfFunc:
+        expected_type = tableOfFunc[currentFunction]['return_type']
+        if expected_type != return_type:
+            if not (expected_type == 'Real' and return_type == 'Int'):
+                fail_semantic("невідповідність типу return", (numLine, currentFunction, expected_type, return_type))
+
+    prev_ident()
+    return 'return'
+
+
+
 print("\nЛЕКСИЧНИЙ АНАЛІЗ ПРОГРАМИ МОВОЮ QIRIM")
 main_tbl = PrettyTable()
 main_tbl.field_names = ["Рядок", "Лексема", "Токен", "Індекс"]

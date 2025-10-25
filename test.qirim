@@ -1,15 +1,15 @@
 
 fun foo(a: Int) : Int {
-
+    return 1
 }
 fun fao(a: String) {}
 
 fun bao(alpha : Int, betta : Int): Int = alpha + betta
 
 fun main() {
-    val a = 1;
-    var b = foo(a);
-    fao("abc");
+    val a = 1
+    var b = foo(a)
+    fao("abc")
 
     b = 3
 }
