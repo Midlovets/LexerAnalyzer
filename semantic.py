@@ -338,33 +338,46 @@ def parse_function_declaration():
         numRow += 1
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, "identifier", "identifier"))
-    
+
     parse_token("(", "brackets_op")
     params = []
     numLine, lex, tok = get_symb()
     if lex != ")":
         params = parse_params()
     parse_token(")", "brackets_op")
-    
+
     return_type = 'Unit'
     numLine, lex, tok = get_symb()
     if lex == ":" and tok == "punct":
         numRow += 1
         return_type = parse_return_type()
-    
+
     add_func_to_table(function_name, params, return_type, func_line)
-    
+
+    for param_name, param_type, has_default in params:
+        if param_name not in tableOfVar:  # Проста перевірка, щоб уникнути конфліктів
+            add_var_to_table(param_name, param_type, is_mutable=False, is_initialized=True, numLine=func_line)
+
+
     numLine, lex, tok = get_symb()
     if lex == "=" and tok == "assign_op":
         numRow += 1
         expr_type = parse_expression()
         if return_type != 'Unit' and expr_type != return_type:
-            fail_semantic("невідповідність типу return", (numLine, function_name, return_type, expr_type))
+            # Дозволяємо неявне перетворення Int -> Real
+            if not (return_type == 'Real' and expr_type == 'Int'):
+                fail_semantic("невідповідність типу return", (numLine, function_name, return_type, expr_type))
     elif lex == "{" and tok == "brackets_op":
         parse_block(is_function_block=True, function_name=function_name)
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, "= або {", "(assign_op або brackets_op)"))
-    
+
+
+    for param_name, _, _ in params:
+        if param_name in tableOfVar and tableOfVar[param_name]['line'] == func_line:
+            del tableOfVar[param_name]
+            print(f"    [Semantic] Видалено параметр: {param_name} з tableOfVar")
+
     currentFunction = None
     prev_ident()
     return True

@@ -1,8 +1,15 @@
 
-fun foo(a: Int) {
+fun foo(a: Int) : Int {
 
 }
+fun fao(a: String) {}
+
+fun bao(alpha : Int, betta : Int): Int = alpha + betta
 
 fun main() {
-    foo("abc");
+    val a = 1;
+    var b = foo(a);
+    fao("abc");
+
+    b = 3
 }
