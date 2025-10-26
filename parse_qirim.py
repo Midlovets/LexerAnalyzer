@@ -231,6 +231,11 @@ def fail_semantic(msg, data):
         print(f"Рядок {numLine}: Ділення на нуль")
         print(f"Оператор '{op}' не може мати правий операнд рівний нулю")
         exit(2015)
+    elif msg == "невідповідність типу у діапазоні":
+        numLine, context, expected_type, actual_type, position = data
+        print(f"Рядок {numLine}: Невідповідність типу у діапазоні циклу for ({context})")
+        print(f"Очікувався тип: {expected_type}, отримано: {actual_type} ({position})")
+        exit(2016)
     else:
         print(f"Semantic ERROR: {msg}")
         print(f"Дані: {data}")
@@ -932,22 +937,29 @@ def parse_for_range():
     global numRow
     indent = next_ident()
     print(f"{indent}parse_for_range():")
+    start_line, _, _ = get_symb()
     range_start_type = parse_expression()
     numLine, lex, tok = get_symb()
-
     if lex == ".." and tok == "punct":
         numRow += 1
         range_end_type = parse_expression()
-        if range_start_type != 'Int' or range_end_type != 'Int':
-            print(f"    WARNING: Діапазон має бути Int..Int, отримано {range_start_type}..{range_end_type}")
+        if range_start_type != 'Int':
+            fail_semantic("невідповідність типу у діапазоні",
+                          (start_line, "for", "Int", range_start_type, "початок діапазону"))
+        if range_end_type != 'Int':
+            fail_semantic("невідповідність типу у діапазоні",
+                          (numLine, "for", "Int", range_end_type, "кінець діапазону"))
         numLine, lex, tok = get_symb()
     elif lex == "downTo" and tok == "keyword":
         numRow += 1
         range_end_type = parse_expression()
-        if range_start_type != 'Int' or range_end_type != 'Int':
-            print(f"    WARNING: Діапазон має бути Int downTo Int, отримано {range_start_type} downTo {range_end_type}")
+        if range_start_type != 'Int':
+            fail_semantic("невідповідність типу у діапазоні",
+                          (start_line, "downTo", "Int", range_start_type, "початок діапазону"))
+        if range_end_type != 'Int':
+            fail_semantic("невідповідність типу у діапазоні",
+                          (numLine, "downTo", "Int", range_end_type, "кінець діапазону"))
         numLine, lex, tok = get_symb()
-
     if lex == "step" and tok == "keyword":
         numRow += 1
         parse_step_expr()
@@ -972,10 +984,11 @@ def parse_step_expr():
     return True
 
 
-def parse_do_block(is_function_block=False, function_name=None):
+def parse_do_block(is_function_block=False, function_name=None, create_scope=True):
     global numRow
     indent = next_ident()
     print(f"{indent}parse_do_block():")
+    vars_before = set(tableOfVar.keys()) if create_scope else None
     numLine, lex, tok = get_symb()
     if lex == "{" and tok == "brackets_op":
         numRow += 1
@@ -992,6 +1005,11 @@ def parse_do_block(is_function_block=False, function_name=None):
             print(f"Parser ERROR: Рядок {numLine}: Оголошення змінних '{lex}' не дозволене без блоку {{ ... }}")
             exit(1015)
         parse_statement(is_function_block, function_name)
+    if create_scope and vars_before is not None:
+        vars_to_remove = [v for v in tableOfVar.keys() if v not in vars_before]
+        for var_name in vars_to_remove:
+            del tableOfVar[var_name]
+            print(f"    SEMANTIC: Видалено локальну змінну блоку: {var_name}")
     prev_ident()
     return True
 
