@@ -988,6 +988,9 @@ def parse_do_block(is_function_block=False, function_name=None):
         else:
             fail_parse("Незакритий блок { ... }", (numLine2, lex2, tok2))
     else:
+        if lex in ("val", "var") and tok == "keyword":
+            print(f"Parser ERROR: Рядок {numLine}: Оголошення змінних '{lex}' не дозволене без блоку {{ ... }}")
+            exit(1015)
         parse_statement(is_function_block, function_name)
     prev_ident()
     return True
