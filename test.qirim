@@ -5,14 +5,17 @@ fun hello(name: String) {
 fun myFun(a: Int, b: Int): Int = a + b
 
 fun `fun`(): Int {
-    return 0
+    val a = 5 + 10
+    return a * 2
 }
 
 fun main() {
-    val x: Int = 5; var y: Real = 3.14
+    val x: Int = 5; var y: Real = 3
     val s: String = "Hello"
     var flag: Boolean = true
     val name: String = "Valeriia"
+
+    val result = s + name
 
     hello(name)
 
@@ -20,10 +23,11 @@ fun main() {
         print("positive")
     } else {
         print("negative")
+        print("negative")
     }
 
     when (x) {
-        1 -> print("one")
+        1 -> { print("one"); print("one") }
         2, 3 -> print("two or three")
         4 -> print("four")
         5 -> print("five")
@@ -46,6 +50,8 @@ fun main() {
     do {
         k = k + 1
     } while (k < 3)
+
+    `fun`()
 
     val res: Int = myFun(2, 3)
     print("myFun = ")
