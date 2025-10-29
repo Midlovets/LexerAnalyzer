@@ -1,3 +1,5 @@
+val name = "Valeriia"
+
 fun hello(name: String) {
     print("Hello, $name")
 }
@@ -13,7 +15,6 @@ fun main() {
     val x: Int = 5; var y: Real = 3
     val s: String = "Hello"
     var flag: Boolean = true
-    val name: String = "Valeriia"
 
     val result = s + name
 
@@ -30,7 +31,7 @@ fun main() {
         1 -> { print("one"); print("one") }
         2, 3 -> print("two or three")
         4 -> print("four")
-        5 -> print("five")
+        5 -> { val age: Int = 20 }
         else -> print("other")
     }
 
