@@ -1,8 +1,12 @@
 
 fun foo(a: Int) : Int {
-    return 1
+    var b = 1
+    val c = a + b
+    return b
 }
-fun fao(a: String) {}
+
+fun fao(a: String){
+}
 
 fun bao(alpha : Int, betta : Int): Int = alpha + betta
 
