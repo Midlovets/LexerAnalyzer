@@ -2,7 +2,7 @@ import os
 from prettytable import PrettyTable
 
 import lex_qirim
-import syntax_qirim
+import semantic_qirim
 
 postfixCode = []
 tableOfLabel = {}
@@ -76,11 +76,11 @@ def save_postfix_to_file(filename="test"):
         f.write(".vars(\n")
         all_vars = {}
         
-        if hasattr(syntax_qirim, 'tableOfVar') and syntax_qirim.tableOfVar:
-            all_vars.update(syntax_qirim.tableOfVar)
+        if hasattr(semantic_qirim, 'tableOfVar') and semantic_qirim.tableOfVar:
+            all_vars.update(semantic_qirim.tableOfVar)
         
-        if hasattr(syntax_qirim, 'tableOfVarByFunction') and syntax_qirim.tableOfVarByFunction:
-            for func_vars in syntax_qirim.tableOfVarByFunction.values():
+        if hasattr(semantic_qirim, 'tableOfVarByFunction') and semantic_qirim.tableOfVarByFunction:
+            for func_vars in semantic_qirim.tableOfVarByFunction.values():
                 if func_vars:
                     all_vars.update(func_vars)
         
@@ -105,8 +105,8 @@ def save_postfix_to_file(filename="test"):
         f.write(")\n")
         
         f.write(".funcs(\n")
-        if hasattr(syntax_qirim, 'tableOfFunc') and syntax_qirim.tableOfFunc:
-            for func_name, func_info in syntax_qirim.tableOfFunc.items():
+        if hasattr(semantic_qirim, 'tableOfFunc') and semantic_qirim.tableOfFunc:
+            for func_name, func_info in semantic_qirim.tableOfFunc.items():
                 if func_name == 'main':
                     continue
                 if isinstance(func_info, dict):
@@ -300,8 +300,8 @@ def process_statement(i, table, gen):
                 return gen_assignment(i, table, gen)
             elif next_lex == '(' and next_tok == 'brackets_op':
                 i = gen_func_call(i, table, gen)
-                if hasattr(syntax_qirim, 'tableOfFunc') and lex in syntax_qirim.tableOfFunc:
-                    func_info = syntax_qirim.tableOfFunc[lex]
+                if hasattr(semantic_qirim, 'tableOfFunc') and lex in semantic_qirim.tableOfFunc:
+                    func_info = semantic_qirim.tableOfFunc[lex]
                     if isinstance(func_info, dict):
                         ret_type = func_info.get('type', 'void')
                     else:
@@ -1103,12 +1103,12 @@ def compile_to_postfix(filename="test"):
 
 def generate_function_postfix_files(base_filename):
     """Генерує окремі .postfix файли для кожної функції"""
-    if not hasattr(syntax_qirim, 'tableOfFunc') or not syntax_qirim.tableOfFunc:
+    if not hasattr(semantic_qirim, 'tableOfFunc') or not semantic_qirim.tableOfFunc:
         return
     
     tableOfSymb = lex_qirim.tableOfSymb
     
-    for func_name, func_info in syntax_qirim.tableOfFunc.items():
+    for func_name, func_info in semantic_qirim.tableOfFunc.items():
         if func_name == 'main':
             continue
         
@@ -1218,8 +1218,8 @@ def save_function_postfix_file(base_filename, func_name, generator, func_info):
         
         f.write(".vars(\n")
         
-        if hasattr(syntax_qirim, 'tableOfVarByFunction') and func_name in syntax_qirim.tableOfVarByFunction:
-            func_vars = syntax_qirim.tableOfVarByFunction[func_name]
+        if hasattr(semantic_qirim, 'tableOfVarByFunction') and func_name in semantic_qirim.tableOfVarByFunction:
+            func_vars = semantic_qirim.tableOfVarByFunction[func_name]
             for var_name, var_info in func_vars.items():
                 if isinstance(var_info, dict) and 'type' in var_info:
                     var_type = var_info['type'].lower()
@@ -1243,8 +1243,8 @@ def save_function_postfix_file(base_filename, func_name, generator, func_info):
         
         for var_name in all_vars_in_postfix:
             found = False
-            if hasattr(syntax_qirim, 'tableOfVarByFunction') and func_name in syntax_qirim.tableOfVarByFunction:
-                if var_name in syntax_qirim.tableOfVarByFunction[func_name]:
+            if hasattr(semantic_qirim, 'tableOfVarByFunction') and func_name in semantic_qirim.tableOfVarByFunction:
+                if var_name in semantic_qirim.tableOfVarByFunction[func_name]:
                     found = True
             if not found:
                 f.write(f"{var_name} int\n")
