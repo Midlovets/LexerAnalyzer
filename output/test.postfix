@@ -3,31 +3,15 @@
 
 .vars(
 	x	int
-	y	float
-	s	string
-	flag	bool
 	message	string
+	a	float
+	exp	float
 )
 
 .code(
 	x	l-val
 	15	int
 	=	assign_op
-	y	l-val
-	3.015	float
-	=	assign_op
-	s	l-val
-	"Hello"	string
-	=	assign_op
-	flag	l-val
-	true	bool
-	=	assign_op
-	s	r-val
-	OUT	out_op
-	"x is "	string
-	OUT	out_op
-	x	r-val
-	OUT	out_op
 	message	l-val
 	"Hello, Valeriia"	string
 	=	assign_op
@@ -37,5 +21,32 @@
 	"Hello, world!"	string
 	=	assign_op
 	message	r-val
+	OUT	out_op
+	a	l-val
+	2.0	float
+	1.0	float
+	+	math_op
+	5.0	float
+	+	math_op
+	=	assign_op
+	a	l-val
+	a	r-val
+	4.0	float
+	*	math_op
+	2.0	float
+	/	math_op
+	3.0	float
+	%	math_op
+	=	assign_op
+	a	r-val
+	OUT	out_op
+	exp	l-val
+	2.0	float
+	3.0	float
+	^	pow_op
+	=	assign_op
+	"exp = "	string
+	OUT	out_op
+	exp	r-val
 	OUT	out_op
 )

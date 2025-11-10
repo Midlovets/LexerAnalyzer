@@ -1,17 +1,16 @@
 fun main() {
     var x: Int
     x = 15
-    var y: Real = 3.015
-    val s: String = "Hello"
-    var flag: Boolean = true
-
-    print(s)
-    print("x is ")
-    print(x)
-
     var message = "Hello, Valeriia"
     print(message)
 
     message = "Hello, world!"
     print(message)
+
+    var a: Real = 2.0 + 1.0 + 5.0
+    a = a * 4.0 / 2.0 % 3.0
+    print(a)
+    val exp: Real = 2.0 ** 3.0
+    print("exp = ")
+    print(exp)
 }

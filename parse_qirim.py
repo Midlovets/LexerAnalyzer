@@ -746,95 +746,33 @@ def parse_declaration(is_mutable):
     numLine, lex, tok = get_symb()
     var_type = None
     is_initialized = False
+
     if lex == ":" and tok == "punct":
         numRow += 1
         var_type = parse_type()
         numLine, lex, tok = get_symb()
-        if lex == "=" and tok == "assign_op":
-            numRow += 1
-            # Генеруємо l-val для змінної перед присвоєнням
-            gen_for_PSM(var_name, 'l-val', postfix_instructions)
-            
-            # Отримуємо значення
-            numLine, value_lex, value_tok = get_symb()
 
-            # Перевірка на унарний мінус
-            is_negative = False
-            if value_tok == "add_op" and value_lex == "-":
-                is_negative = True
-                numRow += 1
-                numLine, value_lex, value_tok = get_symb()
-            # Генеруємо код для значення
-            if value_tok == 'int_const':
-                gen_for_PSM(value_lex, 'int', postfix_instructions)
-                if is_negative:
-                    gen_for_PSM('neg', None, postfix_instructions)
-                numRow += 1
-            elif value_tok == 'real_const':
-                gen_for_PSM(value_lex, 'float', postfix_instructions)
-                if is_negative:
-                    gen_for_PSM('neg', None, postfix_instructions)
-                numRow += 1
-            elif value_tok == 'string_const':
-                gen_for_PSM(value_lex, 'string', postfix_instructions)
-                numRow += 1
-            elif value_tok == 'bool_const':
-                gen_for_PSM(value_lex, 'bool', postfix_instructions)
-                numRow += 1
-            # Генеруємо операцію присвоєння
-            gen_for_PSM('=', 'assign_op', postfix_instructions)
-
-            is_initialized = True
-    elif lex == "=" and tok == "assign_op":
+    if lex == "=" and tok == "assign_op":
         numRow += 1
-        # Генеруємо l-val для змінної перед присвоєнням
+        # Генеруємо l-val для змінної перед обробкою виразу
         gen_for_PSM(var_name, 'l-val', postfix_instructions)
         
-        # Отримуємо значення
-        numLine, value_lex, value_tok = get_symb()
-        # Перевіряємо на унарний мінус
-        is_negative = False
-        if value_tok == "add_op" and value_lex == "-":
-            is_negative = True
-            numRow += 1
-            numLine, value_lex, value_tok = get_symb()
-        # Генеруємо код для значення і визначаємо тип
-        if value_tok == 'int_const':
-            gen_for_PSM(value_lex, 'int', postfix_instructions)
-            if is_negative:
-                gen_for_PSM('neg', None, postfix_instructions)
-            var_type = 'Int'
-            numRow += 1
-        elif value_tok == 'real_const':
-            gen_for_PSM(value_lex, 'float', postfix_instructions)
-            if is_negative:
-                gen_for_PSM('neg', None, postfix_instructions)
-            var_type = 'Real'
-            numRow += 1
-        elif value_tok == 'string_const':
-            gen_for_PSM(value_lex, 'string', postfix_instructions)
-            var_type = 'String'
-            numRow += 1
-        elif value_tok == 'bool_const':
-            gen_for_PSM(value_lex, 'bool', postfix_instructions)
-            var_type = 'Boolean'
-            numRow += 1
-        elif value_tok == 'identifier':
-            # Якщо значення - це змінна, використовуємо її тип
-            if not value_lex in tableOfVar:
-                fail_semantic("використання неоголошеної змінної", (numLine, value_lex))
-            var_type = get_type_var(value_lex)
-            gen_for_PSM(value_lex, 'r-val', postfix_instructions)
-            numRow += 1
+        # Парсимо вираз і отримуємо його тип
+        expr_type = parse_expression()
+        
+        # Якщо тип змінної не був вказаний явно через :, використовуємо тип виразу
+        if var_type is None:
+            var_type = expr_type
+        # Перевіряємо сумісність типів
+        elif var_type != expr_type:
+            if not (var_type == 'Real' and expr_type == 'Int'):
+                fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
+        
         # Генеруємо операцію присвоєння
         gen_for_PSM('=', 'assign_op', postfix_instructions)
-
         is_initialized = True
-    else:
+    elif var_type is None:
         fail_parse("несумісність токенів", (numLine, lex, tok, "var/val, : або =", 'punct або assign_op'))
-    add_var_to_table(var_name, var_type, is_mutable, is_initialized, numLine)
-    prev_ident()
-    return True
 
     add_var_to_table(var_name, var_type, is_mutable, is_initialized, numLine)
     prev_ident()
@@ -953,36 +891,14 @@ def parse_assignment_statement():
 
     # Генеруємо l-val для змінної перед обчисленням виразу
     gen_for_PSM(var_name, 'l-val', postfix_instructions)
-    # Парсимо вираз справа від =
-    numLine, lex, tok = get_symb()
-    if tok == 'string_const':
-        gen_for_PSM(lex, 'string', postfix_instructions)
-        expr_type = 'String'
-        numRow += 1
-    elif tok == 'int_const':
-        gen_for_PSM(lex, 'int', postfix_instructions)
-        expr_type = 'Int'
-        numRow += 1
-    elif tok == 'real_const':
-        gen_for_PSM(lex, 'float', postfix_instructions)
-        expr_type = 'Real'
-        numRow += 1
-    elif tok == 'bool_const':
-        gen_for_PSM(lex, 'bool', postfix_instructions)
-        expr_type = 'Boolean'
-        numRow += 1
-    elif tok == 'identifier':
-        if not lex in tableOfVar:
-            fail_semantic("використання неоголошеної змінної", (numLine, lex))
-        gen_for_PSM(lex, 'r-val', postfix_instructions)
-        expr_type = get_type_var(lex)
-        numRow += 1
-    else:
-        expr_type = parse_expression()
+    
+    # Парсимо вираз справа від = і отримуємо його тип
+    expr_type = parse_expression()
 
     if var_type != expr_type:
         if not (var_type == 'Real' and expr_type == 'Int'):
             fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
+
     # Генеруємо операцію присвоєння
     gen_for_PSM('=', 'assign_op', postfix_instructions)
 
@@ -1409,19 +1325,22 @@ def parse_relational_expr():
 
 
 def parse_add_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_add_expr():")
     left_type = parse_mult_expr()
     while True:
         numLine, lex, tok = get_symb()
         if tok == "add_op":
+            operator = lex
             numRow += 1
             print(f"{indent}Арифметичний оператор: {lex}")
             right_type = parse_mult_expr()
-            result_type = get_type_op(left_type, lex, right_type)
+            result_type = get_type_op(left_type, operator, right_type)
             if result_type == 'type_error':
-                fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+                fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
+            # Генеруємо код для операції
+            gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1430,7 +1349,7 @@ def parse_add_expr():
 
 
 def parse_mult_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_mult_expr():")
     left_type = parse_power_expr()
@@ -1455,6 +1374,8 @@ def parse_mult_expr():
             result_type = get_type_op(left_type, operator, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
+            # Генеруємо код для операції
+            gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1463,19 +1384,22 @@ def parse_mult_expr():
 
 
 def parse_power_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_power_expr():")
     left_type = parse_unary_expr()
     while True:
         numLine, lex, tok = get_symb()
         if tok == "exp_op":
+            operator = lex  # Зберігаємо оператор
             numRow += 1
             print(f"{indent}Оператор піднесення до степеня: {lex}")
             right_type = parse_unary_expr()
-            result_type = get_type_op(left_type, lex, right_type)
+            result_type = get_type_op(left_type, operator, right_type)
             if result_type == 'type_error':
-                fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+                fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
+            # Генеруємо код для операції
+            gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1563,6 +1487,9 @@ def parse_primary_expr():
 
     if tok == "identifier":
         trace(f"{indent}  Variable: {lex}")
+        if not lex in tableOfVar:
+            fail_semantic("використання неоголошеної змінної", (numLine, lex))
+        gen_for_PSM(lex, 'r-val', postfix_instructions)
         numRow += 1
         prev_ident()
         return get_type_var(lex)

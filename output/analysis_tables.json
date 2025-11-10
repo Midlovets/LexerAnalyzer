@@ -16,29 +16,23 @@
         "mutable": true,
         "line": 3
       },
-      "y": {
-        "type": "Real",
-        "initialized": true,
-        "mutable": true,
-        "line": 4
-      },
-      "s": {
-        "type": "String",
-        "initialized": true,
-        "mutable": false,
-        "line": 5
-      },
-      "flag": {
-        "type": "Boolean",
-        "initialized": true,
-        "mutable": true,
-        "line": 6
-      },
       "message": {
         "type": "String",
         "initialized": true,
         "mutable": true,
-        "line": 12
+        "line": 4
+      },
+      "a": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": true,
+        "line": 10
+      },
+      "exp": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 13
       }
     }
   }
