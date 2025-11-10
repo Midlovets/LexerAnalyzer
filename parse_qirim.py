@@ -3,6 +3,7 @@ import json
 import os
 import traceback
 import lex_qirim
+from gen_instruction_code import gen_for_PSM
 
 lex_qirim.lex()
 
@@ -25,6 +26,46 @@ tableOfVarByFunction = {}
 currentFunction = None
 TRACE = False
 OUTPUT_DIR = "output"  # Директорія для запису таблиць у файл
+
+# Глобальний список для зберігання інструкцій постфіксного коду
+postfix_instructions = []
+
+
+# Запис POSTIX-файлу
+def generate_postfix_file(input_file_name):
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)
+
+    base_name = os.path.splitext(os.path.basename(input_file_name))[0]
+    output_file = os.path.join(OUTPUT_DIR, f"{base_name}.postfix")
+
+    header = ".target: Postfix Machine\n.version: 0.3\n\n"
+    vars_section = ".vars(\n"
+
+    if 'main' in tableOfVarByFunction:
+        for var_name, var_info in tableOfVarByFunction['main'].items():
+            var_type = var_info['type'].lower()
+            if var_type == "int":
+                psm_type = "int"
+            elif var_type == "real":
+                psm_type = "float"
+            elif var_type == "string":
+                psm_type = "string"
+            elif var_type == "boolean":
+                psm_type = "bool"
+            vars_section += f"\t{var_name}\t{psm_type}\n"
+    vars_section += ")\n\n"
+
+    code_section = ".code(\n"
+    for instr, opt in postfix_instructions:
+        code_section += f"\t{instr}\t{opt}\n"
+    code_section += ")"
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(header + vars_section + code_section)
+
+    print(f"\nINFO: Постфіксний код збережено у файл: {output_file}")
+    return output_file
 
 
 def save_tables_to_file():
@@ -124,6 +165,12 @@ def get_symb():
         fail_parse("неочікуваний кінець програми", numRow)
     numLine, lexeme, token, _ = tableOfSymb[numRow]
     return numLine, lexeme, token
+
+
+def pop_symb():
+    global numRow
+    if numRow > 1:
+        numRow -= 1
 
 
 def fail_parse(msg, data):
@@ -338,7 +385,9 @@ def parse_token(lexeme, token):
     print(f"{indent}parse_token(): Рядок {numLine} - токен {lex}, {tok}")
     trace(f"{indent}очікувалося: {lexeme}, {token}")
 
-    if (lex, tok) == (lexeme, token):
+    if token == "type" and lexeme == "Boolean" and lex == "Boolean":
+        res = True
+    elif (lex, tok) == (lexeme, token):
         res = True
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, lexeme, token))
@@ -396,7 +445,8 @@ def parse_program():
 
 
 def parse_main_function():
-    global numRow, currentFunction
+    global numRow, currentFunction, postfix_instructions
+    postfix_instructions = []  # Очищаємо список інструкцій перед початком парсингу
     indent = next_ident()
     print(f"{indent}parse_main_function():")
     currentFunction = 'main'
@@ -681,7 +731,7 @@ def parse_variable_declaration():
 
 
 def parse_declaration(is_mutable):
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_declaration():")
     numLine, lex, tok = get_symb()
@@ -696,24 +746,95 @@ def parse_declaration(is_mutable):
     numLine, lex, tok = get_symb()
     var_type = None
     is_initialized = False
-
     if lex == ":" and tok == "punct":
         numRow += 1
         var_type = parse_type()
         numLine, lex, tok = get_symb()
         if lex == "=" and tok == "assign_op":
             numRow += 1
-            expr_type = parse_expression()
-            if var_type != expr_type:
-                if not (var_type == 'Real' and expr_type == 'Int'):
-                    fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
+            # Генеруємо l-val для змінної перед присвоєнням
+            gen_for_PSM(var_name, 'l-val', postfix_instructions)
+            
+            # Отримуємо значення
+            numLine, value_lex, value_tok = get_symb()
+
+            # Перевірка на унарний мінус
+            is_negative = False
+            if value_tok == "add_op" and value_lex == "-":
+                is_negative = True
+                numRow += 1
+                numLine, value_lex, value_tok = get_symb()
+            # Генеруємо код для значення
+            if value_tok == 'int_const':
+                gen_for_PSM(value_lex, 'int', postfix_instructions)
+                if is_negative:
+                    gen_for_PSM('neg', None, postfix_instructions)
+                numRow += 1
+            elif value_tok == 'real_const':
+                gen_for_PSM(value_lex, 'float', postfix_instructions)
+                if is_negative:
+                    gen_for_PSM('neg', None, postfix_instructions)
+                numRow += 1
+            elif value_tok == 'string_const':
+                gen_for_PSM(value_lex, 'string', postfix_instructions)
+                numRow += 1
+            elif value_tok == 'bool_const':
+                gen_for_PSM(value_lex, 'bool', postfix_instructions)
+                numRow += 1
+            # Генеруємо операцію присвоєння
+            gen_for_PSM('=', 'assign_op', postfix_instructions)
+
             is_initialized = True
     elif lex == "=" and tok == "assign_op":
         numRow += 1
-        var_type = parse_expression()
+        # Генеруємо l-val для змінної перед присвоєнням
+        gen_for_PSM(var_name, 'l-val', postfix_instructions)
+        
+        # Отримуємо значення
+        numLine, value_lex, value_tok = get_symb()
+        # Перевіряємо на унарний мінус
+        is_negative = False
+        if value_tok == "add_op" and value_lex == "-":
+            is_negative = True
+            numRow += 1
+            numLine, value_lex, value_tok = get_symb()
+        # Генеруємо код для значення і визначаємо тип
+        if value_tok == 'int_const':
+            gen_for_PSM(value_lex, 'int', postfix_instructions)
+            if is_negative:
+                gen_for_PSM('neg', None, postfix_instructions)
+            var_type = 'Int'
+            numRow += 1
+        elif value_tok == 'real_const':
+            gen_for_PSM(value_lex, 'float', postfix_instructions)
+            if is_negative:
+                gen_for_PSM('neg', None, postfix_instructions)
+            var_type = 'Real'
+            numRow += 1
+        elif value_tok == 'string_const':
+            gen_for_PSM(value_lex, 'string', postfix_instructions)
+            var_type = 'String'
+            numRow += 1
+        elif value_tok == 'bool_const':
+            gen_for_PSM(value_lex, 'bool', postfix_instructions)
+            var_type = 'Boolean'
+            numRow += 1
+        elif value_tok == 'identifier':
+            # Якщо значення - це змінна, використовуємо її тип
+            if not value_lex in tableOfVar:
+                fail_semantic("використання неоголошеної змінної", (numLine, value_lex))
+            var_type = get_type_var(value_lex)
+            gen_for_PSM(value_lex, 'r-val', postfix_instructions)
+            numRow += 1
+        # Генеруємо операцію присвоєння
+        gen_for_PSM('=', 'assign_op', postfix_instructions)
+
         is_initialized = True
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, "var/val, : або =", 'punct або assign_op'))
+    add_var_to_table(var_name, var_type, is_mutable, is_initialized, numLine)
+    prev_ident()
+    return True
 
     add_var_to_table(var_name, var_type, is_mutable, is_initialized, numLine)
     prev_ident()
@@ -772,6 +893,8 @@ def parse_statement(is_function_block=False, function_name=None):
         parse_if_statement()
     elif lex == "when" and tok == "keyword":
         parse_when_statement()
+    elif lex in ("val", "var") and tok == "keyword":
+        parse_variable_declarations()
     elif tok == "identifier":
         if numRow + 1 <= len_tableOfSymb:
             _, next_lex, next_tok, _ = tableOfSymb[numRow + 1]
@@ -806,7 +929,7 @@ def parse_statement(is_function_block=False, function_name=None):
 
 
 def parse_assignment_statement():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_assignment_statement():")
     numLine, lex, tok = get_symb()
@@ -827,11 +950,41 @@ def parse_assignment_statement():
     var_type = get_type_var(var_name)
 
     parse_token("=", "assign_op")
-    expr_type = parse_expression()
+
+    # Генеруємо l-val для змінної перед обчисленням виразу
+    gen_for_PSM(var_name, 'l-val', postfix_instructions)
+    # Парсимо вираз справа від =
+    numLine, lex, tok = get_symb()
+    if tok == 'string_const':
+        gen_for_PSM(lex, 'string', postfix_instructions)
+        expr_type = 'String'
+        numRow += 1
+    elif tok == 'int_const':
+        gen_for_PSM(lex, 'int', postfix_instructions)
+        expr_type = 'Int'
+        numRow += 1
+    elif tok == 'real_const':
+        gen_for_PSM(lex, 'float', postfix_instructions)
+        expr_type = 'Real'
+        numRow += 1
+    elif tok == 'bool_const':
+        gen_for_PSM(lex, 'bool', postfix_instructions)
+        expr_type = 'Boolean'
+        numRow += 1
+    elif tok == 'identifier':
+        if not lex in tableOfVar:
+            fail_semantic("використання неоголошеної змінної", (numLine, lex))
+        gen_for_PSM(lex, 'r-val', postfix_instructions)
+        expr_type = get_type_var(lex)
+        numRow += 1
+    else:
+        expr_type = parse_expression()
 
     if var_type != expr_type:
         if not (var_type == 'Real' and expr_type == 'Int'):
             fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
+    # Генеруємо операцію присвоєння
+    gen_for_PSM('=', 'assign_op', postfix_instructions)
 
     set_var_initialized(var_name)
 
@@ -871,17 +1024,26 @@ def parse_input_statement():
 
 
 def parse_output_statement():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_output_statement():")
     parse_token("print", "keyword")
     parse_token("(", "brackets_op")
     numLine, lex, tok = get_symb()
     if lex != ")" or tok != "brackets_op":
-        if tok == "string_const" and ("${" in lex):
+        if tok == "string_literal" or tok == "string_const":
+            gen_for_PSM(lex, 'string', postfix_instructions)
+            numRow += 1
+        elif tok == "identifier":
+            if not get_type_var(lex):
+                fail_semantic('використання неоголошеної змінної', (numLine, lex))
+            gen_for_PSM(lex, 'r-val', postfix_instructions)
             numRow += 1
         else:
             parse_expression()
+
+        # Генеруємо операцію виводу
+        gen_for_PSM('print', None, postfix_instructions)
     parse_token(")", "brackets_op")
     prev_ident()
     return True
@@ -1140,7 +1302,11 @@ def parse_return_statement():
 
     return_type = None
     if lex not in ("}", ";"):
-        return_type = parse_expression()
+        expr_type = parse_expression()
+        if expr_type:
+            return_type = expr_type
+        else:
+            return_type = 'Unit'
     else:
         return_type = 'Unit'
 
@@ -1151,7 +1317,7 @@ def parse_return_statement():
                 fail_semantic("невідповідність типу return", (numLine, currentFunction, expected_type, return_type))
 
     prev_ident()
-    return True
+    return 'return'
 
 
 def parse_expression():
@@ -1354,19 +1520,52 @@ def parse_primary_expr():
         prev_ident()
         return expr_type
 
-    if tok in ("int_const", "real_const", "string_const", "bool_const"):
+    if tok == "add_op" and lex == "-":
+        # Унарний мінус
         numRow += 1
+        numLine, next_lex, next_tok = get_symb()
+        if next_tok in ("int_const", "real_const"):
+            trace(f"{indent}  Const: ({next_lex}, {next_tok})")
+            if next_tok == "int_const":
+                gen_for_PSM(next_lex, 'int', postfix_instructions)
+                gen_for_PSM('neg', None, postfix_instructions)
+                result_type = 'Int'
+            elif next_tok == "real_const":
+                gen_for_PSM(next_lex, 'float', postfix_instructions)
+                gen_for_PSM('neg', None, postfix_instructions)
+                result_type = 'Real'
+            numRow += 1
+            prev_ident()
+            return result_type
+        else:
+            fail_parse("невідповідність у PrimaryExpr", (numLine, next_lex, next_tok, "число після унарного мінуса"))
+
+    if tok in ("int_const", "real_const", "string_const", "bool_const"):
         trace(f"{indent}  Const: ({lex}, {tok})")
+        result_type = None
+
         if tok == "int_const":
+            gen_for_PSM(lex, 'int', postfix_instructions)
             result_type = 'Int'
         elif tok == "real_const":
+            gen_for_PSM(lex, 'float', postfix_instructions)
             result_type = 'Real'
         elif tok == "string_const":
+            gen_for_PSM(lex, 'string', postfix_instructions)
             result_type = 'String'
         elif tok == "bool_const":
+            gen_for_PSM(lex, 'bool', postfix_instructions)
             result_type = 'Boolean'
+
+        numRow += 1
         prev_ident()
         return result_type
+
+    if tok == "identifier":
+        trace(f"{indent}  Variable: {lex}")
+        numRow += 1
+        prev_ident()
+        return get_type_var(lex)
 
     if tok == "identifier" or (lex.startswith("`") and lex.endswith("`")) or (
             tok == 'keyword' and lex in ('readLine', 'print')):
@@ -1570,7 +1769,12 @@ print(statusMessage)
 if len(tableOfSymb) > 0 and FSuccess[1]:
     print("\nСИНТАКСИЧНИЙ ТА СЕМАНТИЧНИЙ АНАЛІЗ ПРОГРАМИ МОВОЮ QIRIM\n")
     try:
-        parse_program()
+        success = parse_program()
+        if success:  # Якщо синтаксичний та семантичний аналіз успішний
+            print("\nГенерація ПОЛІЗ-коду")
+            postfix_file = os.path.join(OUTPUT_DIR, "test.postfix")
+            generate_postfix_file("test.qirim")
+            print(f"\nPOSTFIX-код згенеровано у файл: {postfix_file}")
     except Exception as e:
         print(f"\nПОМИЛКА: {e}")
         traceback.print_exc()

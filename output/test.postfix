@@ -1,0 +1,41 @@
+.target: Postfix Machine
+.version: 0.3
+
+.vars(
+	x	int
+	y	float
+	s	string
+	flag	bool
+	message	string
+)
+
+.code(
+	x	l-val
+	15	int
+	=	assign_op
+	y	l-val
+	3.015	float
+	=	assign_op
+	s	l-val
+	"Hello"	string
+	=	assign_op
+	flag	l-val
+	true	bool
+	=	assign_op
+	s	r-val
+	OUT	out_op
+	"x is "	string
+	OUT	out_op
+	x	r-val
+	OUT	out_op
+	message	l-val
+	"Hello, Valeriia"	string
+	=	assign_op
+	message	r-val
+	OUT	out_op
+	message	l-val
+	"Hello, world!"	string
+	=	assign_op
+	message	r-val
+	OUT	out_op
+)
