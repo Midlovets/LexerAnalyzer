@@ -1,0 +1,6 @@
+fun main() {
+    val x: Int
+    x = 15
+    var 123hello = x * 2
+    print("Result: $y")
+}

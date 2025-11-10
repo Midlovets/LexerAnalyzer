@@ -1,0 +1,62 @@
+.target: Postfix Machine
+.version: 0.3
+
+.vars(
+	x	int
+	message	string
+	a	float
+	exp	float
+	userName	string
+)
+
+.code(
+	x	l-val
+	15	int
+	=	assign_op
+	message	l-val
+	"Hello, Valeriia"	string
+	=	assign_op
+	message	r-val
+	OUT	out_op
+	message	l-val
+	"Hello, world!"	string
+	=	assign_op
+	message	r-val
+	OUT	out_op
+	a	l-val
+	2.0	float
+	1.0	float
+	+	math_op
+	5.0	float
+	+	math_op
+	=	assign_op
+	a	l-val
+	a	r-val
+	4.0	float
+	*	math_op
+	2.0	float
+	/	math_op
+	3.0	float
+	%	math_op
+	=	assign_op
+	a	r-val
+	OUT	out_op
+	exp	l-val
+	2.0	float
+	3.0	float
+	^	pow_op
+	=	assign_op
+	"exp = "	string
+	OUT	out_op
+	exp	r-val
+	OUT	out_op
+	"Enter your name"	string
+	OUT	out_op
+	userName	l-val
+	INP	inp_op
+	=	assign_op
+	"Hello, "	string
+	OUT	out_op
+	userName	r-val
+	OUT	out_op
+)
