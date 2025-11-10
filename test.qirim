@@ -1,15 +1,22 @@
-
-fun foo(a: Int) : Int {
-    return 1
-}
-fun fao(a: String) {}
-
-fun bao(alpha : Int, betta : Int): Int = alpha + betta
-
 fun main() {
-    val a = 1
-    var b = foo(a)
-    fao("abc")
+    var x: Int
+    x = 15
+    var message = "Hello, Valeriia"
+    print(message)
 
-    b = 3
+    message = "Hello, world!"
+    print(message)
+
+    var a: Real = 2.0 + 1.0 + 5.0
+    a = a * 4.0 / 2.0 % 3.0
+    print(a)
+    val exp: Real = 2.0 ** 3.0
+    print("exp = ")
+    print(exp)
+    
+    var userName: String
+    print("Enter your name")  
+    userName = readLine()
+    print("Hello, ")
+    print(userName)
 }
