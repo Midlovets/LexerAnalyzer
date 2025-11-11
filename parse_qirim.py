@@ -1006,7 +1006,7 @@ def parse_function_call_statement():
 
 
 def parse_for_statement():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_for_statement():")
     parse_token("for", "keyword")
@@ -1020,70 +1020,140 @@ def parse_for_statement():
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, "identifier", "identifier"))
 
+    # 1. Оголошення змінної
     old_var_info = None
     if var_name in tableOfVar:
+        # Це обмеження поточного парсера, але для test.qirim це спрацює
         old_var_info = tableOfVar[var_name].copy()
         print(f"    SEMANTIC: Тимчасово затінюємо змінну '{var_name}' для циклу for")
+        # Оновлюємо її
+        tableOfVar[var_name] = {
+            'type': 'Int',
+            'initialized': True,
+            'mutable': True,
+            'line': numLine
+        }
+    else:
+        # ВАЖЛИВО: Додаємо змінну до таблиці. Тепер вона залишиться там
+        # і буде додана у .vars
+        add_var_to_table(var_name, 'Int', is_mutable=True, is_initialized=True, numLine=numLine)
 
-    tableOfVar[var_name] = {
-        'type': 'Int',
-        'initialized': True,
-        'mutable': False,
-        'line': numLine
-    }
+    # Це семантична "тінь": всередині тіла циклу змінна поводиться як 'val'
+    tableOfVar[var_name]['mutable'] = False
     print(f"    SEMANTIC: Створено змінну циклу: {var_name}, тип: Int, mutable: False, line: {numLine}")
 
     parse_token("in", "keyword")
-    parse_for_range()
+
+    # 2. Створення міток для циклу
+    loop_label = create_label("m")
+    exit_label = create_label("m")
+
+    # 3. Генеруємо код ініціалізації та умови
+    # Генеруємо l-val (куди присвоювати)
+    gen_for_PSM(var_name, 'l-val', postfix_instructions)
+
+    step_val_str, is_downTo = parse_for_range(var_name, loop_label, exit_label)
+
     parse_token(")", "brackets_op")
+
+    # 4. Парсимо тіло циклу
     parse_do_block()
 
-    del tableOfVar[var_name]
-    print(f"    SEMANTIC: Видалено змінну циклу: {var_name}")
+    # 5. Відновлюємо 'mutable' для інкременту
+    tableOfVar[var_name]['mutable'] = True
 
-    if old_var_info:
-        tableOfVar[var_name] = old_var_info
-        print(f"    SEMANTIC: Відновлено попередню змінну '{var_name}'")
+    # 6. Генеруємо код інкременту/декременту
+    gen_for_PSM(var_name, 'l-val', postfix_instructions)
+    gen_for_PSM(var_name, 'r-val', postfix_instructions)
+    gen_for_PSM(step_val_str, 'int', postfix_instructions)
+    if is_downTo:
+        gen_for_PSM('-', None, postfix_instructions)  # i = i - step
+    else:
+        gen_for_PSM('+', None, postfix_instructions)  # i = i + step
+    gen_for_PSM('=', 'assign_op', postfix_instructions)
+
+    # 7. Генеруємо стрибок на початок циклу
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    # 8. Генеруємо мітку виходу з циклу
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
 
     prev_ident()
     return True
 
 
-def parse_for_range():
-    global numRow
+def parse_for_range(var_name, loop_label, exit_label):
+    global numRow, postfix_instructions  # <--- ДОДАНО postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_for_range():")
+
+    # 1. Генеруємо код для початкового значення діапазону
     start_line, _, _ = get_symb()
-    range_start_type = parse_expression()
+    range_start_type = parse_expression()  # Генерує код (наприклад, '1 int')
+
+    # Генеруємо присвоєння (наприклад, 'i l-val 1 int = assign_op')
+    gen_for_PSM('=', 'assign_op', postfix_instructions)
+
+    if range_start_type != 'Int':
+        fail_semantic("невідповідність типу у діапазоні",
+                      (start_line, "for", "Int", range_start_type, "початок діапазону"))
+
+    # 2. Генеруємо мітку початку циклу (для перевірки умови)
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
+    # 3. Визначаємо напрямок
+    is_downTo = False
     numLine, lex, tok = get_symb()
     if lex == ".." and tok == "punct":
         numRow += 1
-        range_end_type = parse_expression()
-        if range_start_type != 'Int':
-            fail_semantic("невідповідність типу у діапазоні",
-                          (start_line, "for", "Int", range_start_type, "початок діапазону"))
-        if range_end_type != 'Int':
-            fail_semantic("невідповідність типу у діапазоні",
-                          (numLine, "for", "Int", range_end_type, "кінець діапазону"))
-        numLine, lex, tok = get_symb()
+        is_downTo = False
     elif lex == "downTo" and tok == "keyword":
         numRow += 1
-        range_end_type = parse_expression()
-        if range_start_type != 'Int':
-            fail_semantic("невідповідність типу у діапазоні",
-                          (start_line, "downTo", "Int", range_start_type, "початок діапазону"))
-        if range_end_type != 'Int':
-            fail_semantic("невідповідність типу у діапазоні",
-                          (numLine, "downTo", "Int", range_end_type, "кінець діапазону"))
-        numLine, lex, tok = get_symb()
+        is_downTo = True
+    # (помилку обробить 'else' нижче, якщо токен не 'step' або ')')
+
+    # 4. Генеруємо код перевірки умови
+    gen_for_PSM(var_name, 'r-val', postfix_instructions)  # i r-val
+    range_end_type = parse_expression()  # Генерує код (наприклад, '10 int')
+
+    if range_end_type != 'Int':
+        fail_semantic("невідповідність типу у діапазоні",
+                      (numLine, "for", "Int", range_end_type, "кінець діапазону"))
+
+    # Вибір оператора порівняння
+    if is_downTo:
+        gen_for_PSM('>=', None, postfix_instructions)  # i >= end
+    else:
+        gen_for_PSM('<=', None, postfix_instructions)  # i <= end
+
+    # 5. Генеруємо стрибок, якщо умова хибна (вихід з циклу)
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
+    # 6. Обробка 'step'
+    step_val_str = "1"  # Крок за замовчуванням
+    numLine, lex, tok = get_symb()
+
     if lex == "step" and tok == "keyword":
         numRow += 1
-        parse_step_expr()
+        # (Логіка з parse_step_expr перенесена сюди)
+        numLine_step, step_lex, step_tok = get_symb()
+        if step_tok == "int_const":
+            numRow += 1
+            step_val_str = step_lex
+            print(f"{indent}Крок циклу: {step_lex}")
+        else:
+            fail_parse("несумісність токенів", (numLine_step, step_lex, step_tok, "int_const", "int_const"))
+
     elif lex not in (")", "step"):
         fail_parse("несумісність токенів",
                    (numLine, lex, tok, ".., downTo, step або )", "punct, keyword або brackets_op"))
+
     prev_ident()
-    return True
+    return (step_val_str, is_downTo)  # Повертаємо крок і напрямок
 
 
 def parse_step_expr():

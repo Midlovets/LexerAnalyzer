@@ -10,16 +10,10 @@
   },
   "function_vars": {
     "main": {
-      "boolean": {
-        "type": "Boolean",
-        "initialized": true,
-        "mutable": false,
-        "line": 2
-      },
-      "a": {
+      "i": {
         "type": "Int",
         "initialized": true,
-        "mutable": false,
+        "mutable": true,
         "line": 10
       }
     }

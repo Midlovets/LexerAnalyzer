@@ -1,42 +1,13 @@
 fun main() {
-    var x: Int
-    x = 15
-    var flag: Boolean = true
-    var message = "Hello, Valeriia"
-    print(message)
-
-    message = "Hello, world!"
-    print(message)
-
-    if (x > 0 && flag || !false) {
-        print("positive")
-    } else {
-        print("negative")
+    for (i in 1..10) {
+        print(i)
     }
 
-    x = 5
-    var y: Int = 0
-
-    while (x > y) {
-        print(x)
-        x = x + 1
-        do {
-            print(y)
-            y = y + 1
-        } while (y <= 5)
+    for (i in 10..100 step 10) {
+        print(i)
     }
-    print("Done")
 
-    print("Enter a number: ")
-    val input: String = readLine()
-    print("You entered: ")
-    print(input)
-
-    var a: Int = 2 + 5 + 3
-    a = a * 4 % 3
-    print(a)
-
-    val exp: Real = 2.0 ** 3.0
-    print("exp = ")
-    print(exp)
+    for (i in 10 downTo 1) {
+        print(i)
+    }
 }
