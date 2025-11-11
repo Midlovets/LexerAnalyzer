@@ -34,29 +34,23 @@
         "mutable": true,
         "line": 18
       },
-      "z": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": true,
-        "line": 19
-      },
       "input": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 32
+        "line": 31
       },
       "a": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 36
+        "line": 35
       },
       "exp": {
         "type": "Real",
         "initialized": true,
         "mutable": false,
-        "line": 40
+        "line": 39
       }
     }
   }

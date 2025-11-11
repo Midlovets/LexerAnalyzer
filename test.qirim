@@ -14,19 +14,18 @@ fun main() {
         print("negative")
     }
 
-    x = 1
-    var y: Int = 4
-    var z: Int = 1
+    x = 5
+    var y: Int = 0
 
-    while (x < y) {
+    while (x > y) {
         print(x)
         x = x + 1
-        z = 0
-        while (z < 3) {
-            print(z)
-            z = z + 1
-        }
+        do {
+            print(y)
+            y = y + 1
+        } while (y <= 5)
     }
+    print("Done")
 
     print("Enter a number: ")
     val input: String = readLine()
