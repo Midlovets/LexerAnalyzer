@@ -19,6 +19,8 @@ numRow = 1
 stepIdent = 2
 ident = 0
 
+label_counter = 0
+
 tableOfVar = {}
 tableOfFunc = {}
 tableOfVarByFunction = {}
@@ -40,8 +42,9 @@ def generate_postfix_file(input_file_name):
     output_file = os.path.join(OUTPUT_DIR, f"{base_name}.postfix")
 
     header = ".target: Postfix Machine\n.version: 0.3\n\n"
-    vars_section = ".vars(\n"
 
+    # Секція змінних
+    vars_section = ".vars(\n"
     if 'main' in tableOfVarByFunction:
         for var_name, var_info in tableOfVarByFunction['main'].items():
             var_type = var_info['type'].lower()
@@ -56,13 +59,28 @@ def generate_postfix_file(input_file_name):
             vars_section += f"\t{var_name}\t{psm_type}\n"
     vars_section += ")\n\n"
 
+    # Секція міток - збираємо всі мітки та їх позиції
+    labels_section = ".labels(\n"
+    label_positions = {}
+    for idx, (instr, opt) in enumerate(postfix_instructions):
+        if opt == 'label' and idx + 1 < len(postfix_instructions):
+            next_instr, next_opt = postfix_instructions[idx + 1]
+            if next_opt == 'colon':
+                # Це визначення мітки (label:)
+                label_positions[instr] = idx
+
+    for label_name, position in sorted(label_positions.items(), key=lambda x: x[1]):
+        labels_section += f"\t{label_name}\t{position}\n"
+    labels_section += ")\n\n"
+
+    # Секція коду
     code_section = ".code(\n"
     for instr, opt in postfix_instructions:
         code_section += f"\t{instr}\t{opt}\n"
     code_section += ")"
 
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(header + vars_section + code_section)
+        f.write(header + vars_section + labels_section + code_section)
 
     print(f"\nINFO: Постфіксний код збережено у файл: {output_file}")
     return output_file
@@ -1135,24 +1153,58 @@ def parse_do_while_statement():
 
 
 def parse_if_statement():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_if_statement():")
 
     numLine, _, _ = get_symb()
     parse_token("if", "keyword")
     parse_token("(", "brackets_op")
+
+    # Обчислюємо умову
     cond_type = parse_expression()
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "if", cond_type))
+
     parse_token(")", "brackets_op")
+
+    # Створюємо унікальні мітки
+    else_label = create_label("m")  # мітка для else
+    endif_label = create_label("m")  # мітка для кінця if
+
+    # JF: якщо умова false -> перейти на else_label
+    gen_for_PSM(else_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
+    # THEN гілка
     parse_do_block()
+
+    # Безумовний перехід на кінець (пропустити else)
+    gen_for_PSM(endif_label, 'label', postfix_instructions)
+    gen_for_PSM('jump', None, postfix_instructions)
+
+    # Мітка для ELSE гілки
+    gen_for_PSM(else_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
+    # Перевіряємо else
     numLine, lex, tok = get_symb()
     if lex == "else" and tok == "keyword":
         numRow += 1
         parse_do_block()
+
+    # Мітка кінця конструкції
+    gen_for_PSM(endif_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     prev_ident()
     return True
+
+def create_label(prefix="m"):
+    """Створює унікальну мітку"""
+    global label_counter
+    label_counter += 1
+    return f"{prefix}{label_counter}"
 
 
 def parse_when_statement():

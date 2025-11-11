@@ -10,35 +10,17 @@
   },
   "function_vars": {
     "main": {
-      "x": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": true,
-        "line": 3
-      },
-      "message": {
-        "type": "String",
-        "initialized": true,
-        "mutable": true,
-        "line": 4
-      },
-      "a": {
-        "type": "Real",
-        "initialized": true,
-        "mutable": true,
-        "line": 10
-      },
-      "exp": {
-        "type": "Real",
+      "boolean": {
+        "type": "Boolean",
         "initialized": true,
         "mutable": false,
-        "line": 13
+        "line": 2
       },
-      "userName": {
-        "type": "String",
+      "a": {
+        "type": "Int",
         "initialized": true,
-        "mutable": true,
-        "line": 18
+        "mutable": false,
+        "line": 10
       }
     }
   }

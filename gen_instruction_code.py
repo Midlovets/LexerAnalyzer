@@ -1,4 +1,13 @@
 def gen_for_PSM(lex, opt, instruction_list):
+    """
+    Генерує інструкції для постфікс-машини
+
+    Parameters:
+    - lex: лексема (символ, ідентифікатор, значення)
+    - opt: тип операції
+    - instruction_list: список для додавання інструкцій
+    """
+
     if opt == 'l-val':
         instr = (lex, 'l-val')
     elif opt == 'r-val':
@@ -7,6 +16,8 @@ def gen_for_PSM(lex, opt, instruction_list):
         instr = ('=', 'assign_op')
     elif opt == 'label':
         instr = (lex, 'label')
+    elif opt == 'colon':
+        instr = (':', 'colon')
     elif opt in ['int', 'float', 'bool', 'string']:
         instr = (lex, opt)
     elif lex == '+':
@@ -61,9 +72,9 @@ def gen_for_PSM(lex, opt, instruction_list):
         instr = ('AND', 'bool_op')
     elif lex == '||':
         instr = ('OR', 'bool_op')
-    elif lex == 'jf':
+    elif lex == 'jf' or opt == 'jf':
         instr = ('JF', 'jf')
-    elif lex == 'jump':
+    elif lex == 'jump' or opt == 'jump':
         instr = ('JUMP', 'jump')
     elif lex == ':':
         instr = (':', 'colon')
@@ -84,5 +95,6 @@ def gen_for_PSM(lex, opt, instruction_list):
     else:
         print(f"Неочікуване значення lex або opt: lex = {lex}; opt = {opt}")
         exit(1)
+
     instruction_list.append(instr)
     return True
