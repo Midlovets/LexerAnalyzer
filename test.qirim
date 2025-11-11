@@ -1,22 +1,27 @@
-fun main() {
-    var x: Int
-    x = 15
-    var message = "Hello, Valeriia"
-    print(message)
-
-    message = "Hello, world!"
-    print(message)
-
-    var a: Real = 2.0 + 1.0 + 5.0
-    a = a * 4.0 / 2.0 % 3.0
+fun foo(a: Int) : Int {
+    var b = 1 + a
+    return b
+}
+fun fao(a: String) {
     print(a)
-    val exp: Real = 2.0 ** 3.0
-    print("exp = ")
-    print(exp)
-    
-    var userName: String
-    print("Enter your name")  
-    userName = readLine()
-    print("Hello, ")
-    print(userName)
+}
+
+fun bao(alpha : Int, betta : Int): Int = alpha + betta
+
+fun main() {
+    // first
+    val a = 1
+    var b = foo(a)
+    print(fao("abc"))
+    // second
+    val str = "bebebe"
+	print(fao(str))
+
+    // third
+    var alpha = 10
+    var betta = 5
+
+    print(bao(alpha, betta))
+
+    b = 3
 }

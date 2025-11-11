@@ -24,7 +24,7 @@ tableOfVarByFunction = {}
 
 currentFunction = None
 TRACE = False
-OUTPUT_DIR = "output"  # Директорія для запису таблиць у файл
+OUTPUT_DIR = "./output"  # Директорія для запису таблиць у файл
 
 
 def save_tables_to_file():
