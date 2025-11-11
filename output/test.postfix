@@ -3,15 +3,24 @@
 
 .vars(
 	x	int
+	flag	bool
 	message	string
 	input	string
 	a	int
 	exp	float
 )
 
+.labels(
+	m1	30
+	m2	34
+)
+
 .code(
 	x	l-val
 	15	int
+	=	assign_op
+	flag	l-val
+	true	bool
 	=	assign_op
 	message	l-val
 	"Hello, Valeriia"	string
@@ -23,6 +32,26 @@
 	=	assign_op
 	message	r-val
 	OUT	out_op
+	x	r-val
+	0	int
+	>	rel_op
+	flag	r-val
+	AND	bool_op
+	false	bool
+	NOT	bool_op
+	OR	bool_op
+	m1	label
+	JF	jf
+	"positive"	string
+	OUT	out_op
+	m2	label
+	JUMP	jump
+	m1	label
+	:	colon
+	"negative"	string
+	OUT	out_op
+	m2	label
+	:	colon
 	"Enter a number: "	string
 	OUT	out_op
 	input	l-val

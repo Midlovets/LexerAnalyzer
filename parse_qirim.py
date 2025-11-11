@@ -15,6 +15,8 @@ FSuccess = lex_qirim.FSuccess
 
 len_tableOfSymb = len(tableOfSymb)
 
+label_counter = 0
+
 numRow = 1
 stepIdent = 2
 ident = 0
@@ -40,8 +42,9 @@ def generate_postfix_file(input_file_name):
     output_file = os.path.join(OUTPUT_DIR, f"{base_name}.postfix")
 
     header = ".target: Postfix Machine\n.version: 0.3\n\n"
-    vars_section = ".vars(\n"
 
+    # Секція змінних
+    vars_section = ".vars(\n"
     if 'main' in tableOfVarByFunction:
         for var_name, var_info in tableOfVarByFunction['main'].items():
             var_type = var_info['type'].lower()
@@ -56,13 +59,25 @@ def generate_postfix_file(input_file_name):
             vars_section += f"\t{var_name}\t{psm_type}\n"
     vars_section += ")\n\n"
 
+    # Секція міток
+    labels_section = ".labels(\n"
+    label_positions = {}
+    for idx, (instr, opt) in enumerate(postfix_instructions):
+        if opt == 'label':
+            label_positions[instr] = idx
+
+    for label_name, position in sorted(label_positions.items(), key=lambda x: x[1]):
+        labels_section += f"\t{label_name}\t{position}\n"
+    labels_section += ")\n\n"
+
+    # Секція коду
     code_section = ".code(\n"
     for instr, opt in postfix_instructions:
         code_section += f"\t{instr}\t{opt}\n"
     code_section += ")"
 
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(header + vars_section + code_section)
+        f.write(header + vars_section + labels_section + code_section)
 
     print(f"\nINFO: Постфіксний код збережено у файл: {output_file}")
     return output_file
@@ -1132,8 +1147,14 @@ def parse_do_while_statement():
     return True
 
 
+def create_label(prefix="m"):
+    global label_counter
+    label_counter += 1
+    return f"{prefix}{label_counter}"
+
+
 def parse_if_statement():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_if_statement():")
 
@@ -1144,11 +1165,29 @@ def parse_if_statement():
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "if", cond_type))
     parse_token(")", "brackets_op")
+
+    else_label = create_label("m")
+    endif_label = create_label("m")
+
+    gen_for_PSM(else_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
     parse_do_block()
+
+    gen_for_PSM(endif_label, 'label', postfix_instructions)
+    gen_for_PSM('jump', None, postfix_instructions)
+
+    gen_for_PSM(else_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     numLine, lex, tok = get_symb()
     if lex == "else" and tok == "keyword":
         numRow += 1
         parse_do_block()
+
+    gen_for_PSM(endif_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     prev_ident()
     return True
 
@@ -1244,7 +1283,7 @@ def parse_expression():
 
 
 def parse_logical_or_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_logical_or_expr():")
     left_type = parse_logical_and_expr()
@@ -1257,6 +1296,7 @@ def parse_logical_or_expr():
             result_type = get_type_op(left_type, '||', right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, '||', left_type, right_type))
+            gen_for_PSM('||', None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1265,7 +1305,7 @@ def parse_logical_or_expr():
 
 
 def parse_logical_and_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_logical_and_expr():")
     left_type = parse_equality_expr()
@@ -1278,6 +1318,7 @@ def parse_logical_and_expr():
             result_type = get_type_op(left_type, '&&', right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, '&&', left_type, right_type))
+            gen_for_PSM('&&', None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1286,19 +1327,21 @@ def parse_logical_and_expr():
 
 
 def parse_equality_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_equality_expr():")
     left_type = parse_relational_expr()
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("==", "!=") and tok == "rel_op":
+            operator = lex
             numRow += 1
             print(f"{indent}Оператор порівняння: {lex}")
             right_type = parse_relational_expr()
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+            gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1307,19 +1350,21 @@ def parse_equality_expr():
 
 
 def parse_relational_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_relational_expr():")
     left_type = parse_add_expr()
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("<", "<=", ">", ">=") and tok == "rel_op":
+            operator = lex
             numRow += 1
             print(f"{indent}Оператор відношення: {lex}")
             right_type = parse_add_expr()
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+            gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1411,7 +1456,7 @@ def parse_power_expr():
 
 
 def parse_unary_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_unary_expr():")
     _, lex, tok = get_symb()
@@ -1428,9 +1473,14 @@ def parse_unary_expr():
         if unary_op in ('+', '-'):
             if expr_type not in ('Int', 'Real'):
                 print(f"    WARNING: Унарний {unary_op} застосовано до типу {expr_type}")
+            # Генеруємо код для унарного мінуса
+            if unary_op == '-':
+                gen_for_PSM('neg', None, postfix_instructions)
         elif unary_op == '!':
             if expr_type != 'Boolean':
                 print(f"    WARNING: Унарний ! застосовано до типу {expr_type}")
+            # Генеруємо код для логічного NOT
+            gen_for_PSM('!', None, postfix_instructions)
 
     prev_ident()
     return expr_type

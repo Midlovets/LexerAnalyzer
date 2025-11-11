@@ -1,11 +1,18 @@
 fun main() {
     var x: Int
     x = 15
+    var flag: Boolean = true
     var message = "Hello, Valeriia"
     print(message)
 
     message = "Hello, world!"
     print(message)
+
+    if (x > 0 && flag || !false) {
+        print("positive")
+    } else {
+        print("negative")
+    }
 
     print("Enter a number: ")
     val input: String = readLine()
