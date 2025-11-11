@@ -63,8 +63,8 @@ def gen_for_PSM(lex, opt, instruction_list):
         instr = ('OR', 'bool_op')
     elif lex == 'jf':
         instr = ('JF', 'jf')
-    elif lex == 'jump':
-        instr = ('JUMP', 'jump')
+    elif lex == 'jmp':
+        instr = ('JMP', 'jump')
     elif lex == ':':
         instr = (':', 'colon')
     elif opt == 'call':

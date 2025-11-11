@@ -5,14 +5,20 @@
 	x	int
 	flag	bool
 	message	string
+	y	int
+	z	int
 	input	string
 	a	int
 	exp	float
 )
 
 .labels(
-	m1	30
-	m2	34
+	m1	27
+	m2	31
+	m3	42
+	m4	79
+	m5	59
+	m6	75
 )
 
 .code(
@@ -34,23 +40,66 @@
 	OUT	out_op
 	x	r-val
 	0	int
-	>	rel_op
-	flag	r-val
-	AND	bool_op
-	false	bool
-	NOT	bool_op
-	OR	bool_op
+	<	rel_op
 	m1	label
 	JF	jf
 	"positive"	string
 	OUT	out_op
 	m2	label
-	JUMP	jump
+	JMP	jump
 	m1	label
 	:	colon
 	"negative"	string
 	OUT	out_op
 	m2	label
+	:	colon
+	x	l-val
+	1	int
+	=	assign_op
+	y	l-val
+	4	int
+	=	assign_op
+	z	l-val
+	1	int
+	=	assign_op
+	m3	label
+	:	colon
+	x	r-val
+	y	r-val
+	<	rel_op
+	m4	label
+	JF	jf
+	x	r-val
+	OUT	out_op
+	x	l-val
+	x	r-val
+	1	int
+	+	math_op
+	=	assign_op
+	z	l-val
+	0	int
+	=	assign_op
+	m5	label
+	:	colon
+	z	r-val
+	3	int
+	<	rel_op
+	m6	label
+	JF	jf
+	z	r-val
+	OUT	out_op
+	z	l-val
+	z	r-val
+	1	int
+	+	math_op
+	=	assign_op
+	m5	label
+	JMP	jump
+	m6	label
+	:	colon
+	m3	label
+	JMP	jump
+	m4	label
 	:	colon
 	"Enter a number: "	string
 	OUT	out_op

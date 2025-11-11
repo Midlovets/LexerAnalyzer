@@ -28,23 +28,35 @@
         "mutable": true,
         "line": 5
       },
+      "y": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 18
+      },
+      "z": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 19
+      },
       "input": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 18
+        "line": 32
       },
       "a": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 22
+        "line": 36
       },
       "exp": {
         "type": "Real",
         "initialized": true,
         "mutable": false,
-        "line": 26
+        "line": 40
       }
     }
   }

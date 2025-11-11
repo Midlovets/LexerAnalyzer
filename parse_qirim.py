@@ -1,6 +1,7 @@
 from prettytable import PrettyTable
 import json
 import os
+import re
 import traceback
 import lex_qirim
 from gen_instruction_code import gen_for_PSM
@@ -63,10 +64,23 @@ def generate_postfix_file(input_file_name):
     labels_section = ".labels(\n"
     label_positions = {}
     for idx, (instr, opt) in enumerate(postfix_instructions):
-        if opt == 'label':
-            label_positions[instr] = idx
+        if opt == 'label' and instr not in label_positions:
+            colon_idx = idx + 1
+            if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
+                label_positions[instr] = colon_idx + 1
+            else:
+                continue
+        elif opt == 'label' and instr in label_positions:
+            colon_idx = idx + 1
+            if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
+                label_positions[instr] = colon_idx + 1
 
-    for label_name, position in sorted(label_positions.items(), key=lambda x: x[1]):
+    def get_label_number(label_name):
+        match = re.search(r'\d+', label_name)
+        return int(match.group()) if match else float('inf')
+
+    for label_name in sorted(label_positions.keys(), key=get_label_number):
+        position = label_positions[label_name]
         labels_section += f"\t{label_name}\t{position}\n"
     labels_section += ")\n\n"
 
@@ -1117,25 +1131,54 @@ def parse_do_block(is_function_block=False, function_name=None, create_scope=Tru
 
 
 def parse_while_statement():
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_while_statement():")
     numLine, _, _ = get_symb()
     parse_token("while", "keyword")
     parse_token("(", "brackets_op")
+
+    loop_label = create_label("m")
+    exit_label = create_label("m")
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     cond_type = parse_expression()
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "while", cond_type))
     parse_token(")", "brackets_op")
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
     parse_do_block()
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     prev_ident()
     return True
 
 
 def parse_do_while_statement():
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_do_while_statement():")
+
+    loop_label = create_label("m")
+    exit_label = create_label("m")
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     parse_token("do", "keyword")
+
     parse_do_block()
+
     numLine, _, _ = get_symb()
     parse_token("while", "keyword")
     parse_token("(", "brackets_op")
@@ -1143,6 +1186,16 @@ def parse_do_while_statement():
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "do-while", cond_type))
     parse_token(")", "brackets_op")
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     prev_ident()
     return True
 
@@ -1175,7 +1228,7 @@ def parse_if_statement():
     parse_do_block()
 
     gen_for_PSM(endif_label, 'label', postfix_instructions)
-    gen_for_PSM('jump', None, postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
 
     gen_for_PSM(else_label, 'label', postfix_instructions)
     gen_for_PSM(':', 'colon', postfix_instructions)
