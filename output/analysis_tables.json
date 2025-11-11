@@ -22,17 +22,23 @@
         "mutable": true,
         "line": 4
       },
+      "input": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 11
+      },
       "a": {
-        "type": "Real",
+        "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 10
+        "line": 15
       },
       "exp": {
         "type": "Real",
         "initialized": true,
         "mutable": false,
-        "line": 13
+        "line": 19
       }
     }
   }

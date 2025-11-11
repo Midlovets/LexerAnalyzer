@@ -4,7 +4,8 @@
 .vars(
 	x	int
 	message	string
-	a	float
+	input	string
+	a	int
 	exp	float
 )
 
@@ -22,20 +23,27 @@
 	=	assign_op
 	message	r-val
 	OUT	out_op
+	"Enter a number: "	string
+	OUT	out_op
+	input	l-val
+	INP	inp_op
+	=	assign_op
+	"You entered: "	string
+	OUT	out_op
+	input	r-val
+	OUT	out_op
 	a	l-val
-	2.0	float
-	1.0	float
+	2	int
+	5	int
 	+	math_op
-	5.0	float
+	3	int
 	+	math_op
 	=	assign_op
 	a	l-val
 	a	r-val
-	4.0	float
+	4	int
 	*	math_op
-	2.0	float
-	/	math_op
-	3.0	float
+	3	int
 	%	math_op
 	=	assign_op
 	a	r-val

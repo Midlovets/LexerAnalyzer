@@ -756,10 +756,10 @@ def parse_declaration(is_mutable):
         numRow += 1
         # Генеруємо l-val для змінної перед обробкою виразу
         gen_for_PSM(var_name, 'l-val', postfix_instructions)
-        
+
         # Парсимо вираз і отримуємо його тип
         expr_type = parse_expression()
-        
+
         # Якщо тип змінної не був вказаний явно через :, використовуємо тип виразу
         if var_type is None:
             var_type = expr_type
@@ -767,7 +767,7 @@ def parse_declaration(is_mutable):
         elif var_type != expr_type:
             if not (var_type == 'Real' and expr_type == 'Int'):
                 fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
-        
+
         # Генеруємо операцію присвоєння
         gen_for_PSM('=', 'assign_op', postfix_instructions)
         is_initialized = True
@@ -891,7 +891,7 @@ def parse_assignment_statement():
 
     # Генеруємо l-val для змінної перед обчисленням виразу
     gen_for_PSM(var_name, 'l-val', postfix_instructions)
-    
+
     # Парсимо вираз справа від = і отримуємо його тип
     expr_type = parse_expression()
 
@@ -929,9 +929,12 @@ def parse_input_statement():
         print(f"    WARNING: readLine() повертає String, а змінна '{var_name}' має тип {var_type}")
 
     parse_token("=", "assign_op")
+    gen_for_PSM(var_name, 'l-val', postfix_instructions)
     parse_token("readLine", "keyword")
     parse_token("(", "brackets_op")
     parse_token(")", "brackets_op")
+    gen_for_PSM('readLine', None, postfix_instructions)
+    gen_for_PSM('=', 'assign_op', postfix_instructions)
 
     set_var_initialized(var_name)
 
@@ -1508,6 +1511,8 @@ def parse_primary_expr():
                 if lex3 != ")" or tok3 != "brackets_op":
                     fail_parse("readLine() має бути без параметрів", (numLine3, lex3, tok3, ")", "brackets_op"))
                 parse_token(")", "brackets_op")
+                # Генеруємо інструкцію введення, яка помістить рядок на стек
+                gen_for_PSM('readLine', None, postfix_instructions)
                 prev_ident()
                 return 'String'
             else:
