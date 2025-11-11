@@ -1,6 +1,7 @@
 from prettytable import PrettyTable
 import json
 import os
+import re
 import traceback
 import lex_qirim
 from gen_instruction_code import gen_for_PSM
@@ -15,11 +16,11 @@ FSuccess = lex_qirim.FSuccess
 
 len_tableOfSymb = len(tableOfSymb)
 
+label_counter = 0
+
 numRow = 1
 stepIdent = 2
 ident = 0
-
-label_counter = 0
 
 tableOfVar = {}
 tableOfFunc = {}
@@ -59,17 +60,27 @@ def generate_postfix_file(input_file_name):
             vars_section += f"\t{var_name}\t{psm_type}\n"
     vars_section += ")\n\n"
 
-    # Секція міток - збираємо всі мітки та їх позиції
+    # Секція міток
     labels_section = ".labels(\n"
     label_positions = {}
     for idx, (instr, opt) in enumerate(postfix_instructions):
-        if opt == 'label' and idx + 1 < len(postfix_instructions):
-            next_instr, next_opt = postfix_instructions[idx + 1]
-            if next_opt == 'colon':
-                # Це визначення мітки (label:)
-                label_positions[instr] = idx
+        if opt == 'label' and instr not in label_positions:
+            colon_idx = idx + 1
+            if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
+                label_positions[instr] = colon_idx + 1
+            else:
+                continue
+        elif opt == 'label' and instr in label_positions:
+            colon_idx = idx + 1
+            if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
+                label_positions[instr] = colon_idx + 1
 
-    for label_name, position in sorted(label_positions.items(), key=lambda x: x[1]):
+    def get_label_number(label_name):
+        match = re.search(r'\d+', label_name)
+        return int(match.group()) if match else float('inf')
+
+    for label_name in sorted(label_positions.keys(), key=get_label_number):
+        position = label_positions[label_name]
         labels_section += f"\t{label_name}\t{position}\n"
     labels_section += ")\n\n"
 
@@ -774,10 +785,10 @@ def parse_declaration(is_mutable):
         numRow += 1
         # Генеруємо l-val для змінної перед обробкою виразу
         gen_for_PSM(var_name, 'l-val', postfix_instructions)
-        
+
         # Парсимо вираз і отримуємо його тип
         expr_type = parse_expression()
-        
+
         # Якщо тип змінної не був вказаний явно через :, використовуємо тип виразу
         if var_type is None:
             var_type = expr_type
@@ -785,7 +796,7 @@ def parse_declaration(is_mutable):
         elif var_type != expr_type:
             if not (var_type == 'Real' and expr_type == 'Int'):
                 fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
-        
+
         # Генеруємо операцію присвоєння
         gen_for_PSM('=', 'assign_op', postfix_instructions)
         is_initialized = True
@@ -909,7 +920,7 @@ def parse_assignment_statement():
 
     # Генеруємо l-val для змінної перед обчисленням виразу
     gen_for_PSM(var_name, 'l-val', postfix_instructions)
-    
+
     # Парсимо вираз справа від = і отримуємо його тип
     expr_type = parse_expression()
 
@@ -925,8 +936,9 @@ def parse_assignment_statement():
     prev_ident()
     return True
 
+
 def parse_input_statement():
-    global numRow, postfix_instructions
+    global numRow
     indent = next_ident()
     print(f"{indent}parse_input_statement():")
     numLine, lex, tok = get_symb()
@@ -946,13 +958,10 @@ def parse_input_statement():
         print(f"    WARNING: readLine() повертає String, а змінна '{var_name}' має тип {var_type}")
 
     parse_token("=", "assign_op")
-    
     gen_for_PSM(var_name, 'l-val', postfix_instructions)
-    
     parse_token("readLine", "keyword")
     parse_token("(", "brackets_op")
     parse_token(")", "brackets_op")
-    
     gen_for_PSM('readLine', None, postfix_instructions)
     gen_for_PSM('=', 'assign_op', postfix_instructions)
 
@@ -1122,25 +1131,54 @@ def parse_do_block(is_function_block=False, function_name=None, create_scope=Tru
 
 
 def parse_while_statement():
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_while_statement():")
     numLine, _, _ = get_symb()
     parse_token("while", "keyword")
     parse_token("(", "brackets_op")
+
+    loop_label = create_label("m")
+    exit_label = create_label("m")
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     cond_type = parse_expression()
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "while", cond_type))
     parse_token(")", "brackets_op")
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
     parse_do_block()
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     prev_ident()
     return True
 
 
 def parse_do_while_statement():
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_do_while_statement():")
+
+    loop_label = create_label("m")
+    exit_label = create_label("m")
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     parse_token("do", "keyword")
+
     parse_do_block()
+
     numLine, _, _ = get_symb()
     parse_token("while", "keyword")
     parse_token("(", "brackets_op")
@@ -1148,8 +1186,24 @@ def parse_do_while_statement():
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "do-while", cond_type))
     parse_token(")", "brackets_op")
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
+    gen_for_PSM(loop_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    gen_for_PSM(exit_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     prev_ident()
     return True
+
+
+def create_label(prefix="m"):
+    global label_counter
+    label_counter += 1
+    return f"{prefix}{label_counter}"
 
 
 def parse_if_statement():
@@ -1160,51 +1214,35 @@ def parse_if_statement():
     numLine, _, _ = get_symb()
     parse_token("if", "keyword")
     parse_token("(", "brackets_op")
-
-    # Обчислюємо умову
     cond_type = parse_expression()
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "if", cond_type))
-
     parse_token(")", "brackets_op")
 
-    # Створюємо унікальні мітки
-    else_label = create_label("m")  # мітка для else
-    endif_label = create_label("m")  # мітка для кінця if
+    else_label = create_label("m")
+    endif_label = create_label("m")
 
-    # JF: якщо умова false -> перейти на else_label
     gen_for_PSM(else_label, 'label', postfix_instructions)
     gen_for_PSM('jf', None, postfix_instructions)
 
-    # THEN гілка
     parse_do_block()
 
-    # Безумовний перехід на кінець (пропустити else)
     gen_for_PSM(endif_label, 'label', postfix_instructions)
-    gen_for_PSM('jump', None, postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
 
-    # Мітка для ELSE гілки
     gen_for_PSM(else_label, 'label', postfix_instructions)
     gen_for_PSM(':', 'colon', postfix_instructions)
 
-    # Перевіряємо else
     numLine, lex, tok = get_symb()
     if lex == "else" and tok == "keyword":
         numRow += 1
         parse_do_block()
 
-    # Мітка кінця конструкції
     gen_for_PSM(endif_label, 'label', postfix_instructions)
     gen_for_PSM(':', 'colon', postfix_instructions)
 
     prev_ident()
     return True
-
-def create_label(prefix="m"):
-    """Створює унікальну мітку"""
-    global label_counter
-    label_counter += 1
-    return f"{prefix}{label_counter}"
 
 
 def parse_when_statement():
@@ -1298,7 +1336,7 @@ def parse_expression():
 
 
 def parse_logical_or_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_logical_or_expr():")
     left_type = parse_logical_and_expr()
@@ -1311,6 +1349,7 @@ def parse_logical_or_expr():
             result_type = get_type_op(left_type, '||', right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, '||', left_type, right_type))
+            gen_for_PSM('||', None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1319,7 +1358,7 @@ def parse_logical_or_expr():
 
 
 def parse_logical_and_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_logical_and_expr():")
     left_type = parse_equality_expr()
@@ -1332,6 +1371,7 @@ def parse_logical_and_expr():
             result_type = get_type_op(left_type, '&&', right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, '&&', left_type, right_type))
+            gen_for_PSM('&&', None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1340,19 +1380,21 @@ def parse_logical_and_expr():
 
 
 def parse_equality_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_equality_expr():")
     left_type = parse_relational_expr()
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("==", "!=") and tok == "rel_op":
+            operator = lex
             numRow += 1
             print(f"{indent}Оператор порівняння: {lex}")
             right_type = parse_relational_expr()
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+            gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1361,19 +1403,21 @@ def parse_equality_expr():
 
 
 def parse_relational_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_relational_expr():")
     left_type = parse_add_expr()
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("<", "<=", ">", ">=") and tok == "rel_op":
+            operator = lex
             numRow += 1
             print(f"{indent}Оператор відношення: {lex}")
             right_type = parse_add_expr()
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+            gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
@@ -1465,7 +1509,7 @@ def parse_power_expr():
 
 
 def parse_unary_expr():
-    global numRow
+    global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_unary_expr():")
     _, lex, tok = get_symb()
@@ -1482,9 +1526,14 @@ def parse_unary_expr():
         if unary_op in ('+', '-'):
             if expr_type not in ('Int', 'Real'):
                 print(f"    WARNING: Унарний {unary_op} застосовано до типу {expr_type}")
+            # Генеруємо код для унарного мінуса
+            if unary_op == '-':
+                gen_for_PSM('neg', None, postfix_instructions)
         elif unary_op == '!':
             if expr_type != 'Boolean':
                 print(f"    WARNING: Унарний ! застосовано до типу {expr_type}")
+            # Генеруємо код для логічного NOT
+            gen_for_PSM('!', None, postfix_instructions)
 
     prev_ident()
     return expr_type
@@ -1565,6 +1614,8 @@ def parse_primary_expr():
                 if lex3 != ")" or tok3 != "brackets_op":
                     fail_parse("readLine() має бути без параметрів", (numLine3, lex3, tok3, ")", "brackets_op"))
                 parse_token(")", "brackets_op")
+                # Генеруємо інструкцію введення, яка помістить рядок на стек
+                gen_for_PSM('readLine', None, postfix_instructions)
                 prev_ident()
                 return 'String'
             else:

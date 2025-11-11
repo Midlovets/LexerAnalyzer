@@ -1,22 +1,42 @@
 fun main() {
-    val boolean = false
+    var x: Int
+    x = 15
+    var flag: Boolean = true
+    var message = "Hello, Valeriia"
+    print(message)
 
-    if (boolean) {
-        print("bebebe")
+    message = "Hello, world!"
+    print(message)
+
+    if (x > 0 && flag || !false) {
+        print("positive")
     } else {
-        print("asasas")
+        print("negative")
     }
 
-    val a = -100
-    if(a == 10){
-        print("a equals than 10")
-    } else if( a > 10){
-        print("a is greater than 10")
-    }
-    else {
-        print("a is less than 10")
-    }
+    x = 5
+    var y: Int = 0
 
-    print(boolean)
+    while (x > y) {
+        print(x)
+        x = x + 1
+        do {
+            print(y)
+            y = y + 1
+        } while (y <= 5)
+    }
+    print("Done")
+
+    print("Enter a number: ")
+    val input: String = readLine()
+    print("You entered: ")
+    print(input)
+
+    var a: Int = 2 + 5 + 3
+    a = a * 4 % 3
     print(a)
+
+    val exp: Real = 2.0 ** 3.0
+    print("exp = ")
+    print(exp)
 }
