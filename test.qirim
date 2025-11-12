@@ -1,22 +1,91 @@
 fun main() {
-    var x: Int
-    x = 15
-    var message = "Hello, Valeriia"
-    print(message)
-
-    message = "Hello, world!"
-    print(message)
-
-    var a: Real = 2.0 + 1.0 + 5.0
-    a = a * 4.0 / 2.0 % 3.0
-    print(a)
-    val exp: Real = 2.0 ** 3.0
-    print("exp = ")
-    print(exp)
+    // Int + Real 
+    val a: Int = 10
+    val b: Real = 5.5
+    val sum: Real = a + b
+    print("10 + 5.5 = ")
+    print(sum)
     
-    var userName: String
-    print("Enter your name")  
-    userName = readLine()
-    print("Hello, ")
-    print(userName)
+    //  Int в Real 
+    var myReal: Real = 42
+    print("Int 42 як Real: ")
+    print(myReal)
+    
+    //  Экспонента
+    val base: Int = 2
+    val exponent: Real = 3.0
+    val power: Real = base ** exponent
+    print("2^3.0 = ")
+    print(power)
+    
+    val base2: Real = 5.0
+    val exp2: Int = 2
+    val power2: Real = base2 ** exp2
+    print("5.0^2 = ")
+    print(power2)
+    
+    //  String + Int
+    val age: Int = 25
+    print("Вік: " + age)
+    
+    // String + Real 
+    val price: Real = 99.99
+    print("Ціна: " + price)
+    
+    //  Множественная конкатенация 
+    val name: String = "Результат"
+    val value: Int = 42
+    print(name + ": " + value)
+    
+    //  Конкатенация Int + String + Real
+    val quantity: Int = 5
+    val productName: String = " яблук по "
+    val pricePerItem: Real = 12.50
+    print(quantity + productName + pricePerItem + " грн")
+    
+    //  Сложная конкатенация чисел и строк
+    val year: Int = 2024
+    val month: String = "листопад"
+    val day: Int = 12
+    val temperature: Real = -3.5
+    
+    print("Дата: " + day + " " + month + " " + year + ", температура: " + temperature + "°C")
+    
+    // Математические операции с конкатенацией
+    val x: Int = 10
+    val y: Real = 2.5
+    val resultSum: Real = x + y
+    val resultMul: Real = x * y
+    
+    print("Число " + x + " + " + y + " = " + resultSum)
+    print("Число " + x + " * " + y + " = " + resultMul)
+    
+    val s: String = "Hello"
+
+    if (x > 0) {
+        print("positive")
+    } else {
+        print("negative")
+    }
+
+    when (x) {
+        1 -> { print("one") }
+        2 -> print("two or three")
+        4 -> print("four")
+        5 -> print("five")
+        else -> print("other")
+    }
+
+    for (i in 1..10) {
+        print(i)
+    }
+
+    for (j in 5 downTo 1 step 1) {
+        print(j)
+    }
+
+    var k: Int = 0
+    do {
+        k = k + 1
+    } while (k < 3)
 }

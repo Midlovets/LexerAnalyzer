@@ -10,35 +10,179 @@
   },
   "function_vars": {
     "main": {
-      "x": {
+      "a": {
         "type": "Int",
         "initialized": true,
-        "mutable": true,
+        "mutable": false,
         "line": 3
       },
-      "message": {
-        "type": "String",
+      "b": {
+        "type": "Real",
         "initialized": true,
-        "mutable": true,
+        "mutable": false,
         "line": 4
       },
-      "a": {
+      "sum": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 5
+      },
+      "myReal": {
         "type": "Real",
         "initialized": true,
         "mutable": true,
         "line": 10
       },
-      "exp": {
+      "base": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 15
+      },
+      "exponent": {
         "type": "Real",
         "initialized": true,
         "mutable": false,
-        "line": 13
+        "line": 16
       },
-      "userName": {
+      "power": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 17
+      },
+      "base2": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 21
+      },
+      "exp2": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 22
+      },
+      "power2": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 23
+      },
+      "age": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 28
+      },
+      "price": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 32
+      },
+      "name": {
         "type": "String",
         "initialized": true,
+        "mutable": false,
+        "line": 36
+      },
+      "value": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 37
+      },
+      "quantity": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 41
+      },
+      "productName": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 42
+      },
+      "pricePerItem": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 43
+      },
+      "year": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 47
+      },
+      "month": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 48
+      },
+      "day": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 49
+      },
+      "temperature": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 50
+      },
+      "x": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 55
+      },
+      "y": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 56
+      },
+      "resultSum": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 57
+      },
+      "resultMul": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 58
+      },
+      "s": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 63
+      },
+      "i": {
+        "type": "Int",
+        "initialized": true,
         "mutable": true,
-        "line": 18
+        "line": 79
+      },
+      "j": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 83
+      },
+      "k": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 87
       }
     }
   }

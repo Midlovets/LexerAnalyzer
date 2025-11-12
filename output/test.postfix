@@ -2,61 +2,380 @@
 .version: 0.3
 
 .vars(
+	a	int
+	b	float
+	sum	float
+	myReal	float
+	base	int
+	exponent	float
+	power	float
+	base2	float
+	exp2	int
+	power2	float
+	age	int
+	price	float
+	name	string
+	value	int
+	quantity	int
+	productName	string
+	pricePerItem	float
+	year	int
+	month	string
+	day	int
+	temperature	float
 	x	int
-	message	string
-	a	float
-	exp	float
-	userName	string
+	y	float
+	resultSum	float
+	resultMul	float
+	s	string
+	i	int
+	j	int
+	k	int
+)
+
+.labels(
+	m1	200
+	m2	204
+	m3	266
+	m4	217
+	m5	230
+	m6	243
+	m7	256
+	m8	264
+	m9	271
+	m10	287
+	m11	292
+	m12	308
+	m13	313
+	m14	327
 )
 
 .code(
-	x	l-val
-	15	int
-	=	assign_op
-	message	l-val
-	"Hello, Valeriia"	string
-	=	assign_op
-	message	r-val
-	OUT	out_op
-	message	l-val
-	"Hello, world!"	string
-	=	assign_op
-	message	r-val
-	OUT	out_op
 	a	l-val
-	2.0	float
-	1.0	float
-	+	math_op
-	5.0	float
+	10	int
+	=	assign_op
+	b	l-val
+	5.5	float
+	=	assign_op
+	sum	l-val
+	a	r-val
+	i2f	conv
+	b	r-val
 	+	math_op
 	=	assign_op
-	a	l-val
-	a	r-val
-	4.0	float
-	*	math_op
-	2.0	float
-	/	math_op
-	3.0	float
-	%	math_op
-	=	assign_op
-	a	r-val
+	"10 + 5.5 = "	string
 	OUT	out_op
-	exp	l-val
-	2.0	float
+	sum	r-val
+	OUT	out_op
+	myReal	l-val
+	42	int
+	i2f	conv
+	=	assign_op
+	"Int 42 як Real: "	string
+	OUT	out_op
+	myReal	r-val
+	OUT	out_op
+	base	l-val
+	2	int
+	=	assign_op
+	exponent	l-val
 	3.0	float
+	=	assign_op
+	power	l-val
+	base	r-val
+	i2f	conv
+	exponent	r-val
 	^	pow_op
 	=	assign_op
-	"exp = "	string
+	"2^3.0 = "	string
 	OUT	out_op
-	exp	r-val
+	power	r-val
 	OUT	out_op
-	"Enter your name"	string
-	OUT	out_op
-	userName	l-val
-	INP	inp_op
+	base2	l-val
+	5.0	float
 	=	assign_op
-	"Hello, "	string
+	exp2	l-val
+	2	int
+	=	assign_op
+	power2	l-val
+	base2	r-val
+	exp2	r-val
+	i2f	conv
+	^	pow_op
+	=	assign_op
+	"5.0^2 = "	string
 	OUT	out_op
-	userName	r-val
+	power2	r-val
 	OUT	out_op
+	age	l-val
+	25	int
+	=	assign_op
+	"Вік: "	string
+	age	r-val
+	i2s	conv
+	CAT	cat_op
+	OUT	out_op
+	price	l-val
+	99.99	float
+	=	assign_op
+	"Ціна: "	string
+	price	r-val
+	f2s	conv
+	CAT	cat_op
+	OUT	out_op
+	name	l-val
+	"Результат"	string
+	=	assign_op
+	value	l-val
+	42	int
+	=	assign_op
+	name	r-val
+	": "	string
+	CAT	cat_op
+	value	r-val
+	i2s	conv
+	CAT	cat_op
+	OUT	out_op
+	quantity	l-val
+	5	int
+	=	assign_op
+	productName	l-val
+	" яблук по "	string
+	=	assign_op
+	pricePerItem	l-val
+	12.50	float
+	=	assign_op
+	quantity	r-val
+	i2s	conv
+	productName	r-val
+	CAT	cat_op
+	pricePerItem	r-val
+	f2s	conv
+	CAT	cat_op
+	" грн"	string
+	CAT	cat_op
+	OUT	out_op
+	year	l-val
+	2024	int
+	=	assign_op
+	month	l-val
+	"листопад"	string
+	=	assign_op
+	day	l-val
+	12	int
+	=	assign_op
+	temperature	l-val
+	3.5	float
+	NEG	math_op
+	=	assign_op
+	"Дата: "	string
+	day	r-val
+	i2s	conv
+	CAT	cat_op
+	" "	string
+	CAT	cat_op
+	month	r-val
+	CAT	cat_op
+	" "	string
+	CAT	cat_op
+	year	r-val
+	i2s	conv
+	CAT	cat_op
+	", температура: "	string
+	CAT	cat_op
+	temperature	r-val
+	f2s	conv
+	CAT	cat_op
+	"°C"	string
+	CAT	cat_op
+	OUT	out_op
+	x	l-val
+	10	int
+	=	assign_op
+	y	l-val
+	2.5	float
+	=	assign_op
+	resultSum	l-val
+	x	r-val
+	i2f	conv
+	y	r-val
+	+	math_op
+	=	assign_op
+	resultMul	l-val
+	x	r-val
+	i2f	conv
+	y	r-val
+	*	math_op
+	=	assign_op
+	"Число "	string
+	x	r-val
+	i2s	conv
+	CAT	cat_op
+	" + "	string
+	CAT	cat_op
+	y	r-val
+	f2s	conv
+	CAT	cat_op
+	" = "	string
+	CAT	cat_op
+	resultSum	r-val
+	f2s	conv
+	CAT	cat_op
+	OUT	out_op
+	"Число "	string
+	x	r-val
+	i2s	conv
+	CAT	cat_op
+	" * "	string
+	CAT	cat_op
+	y	r-val
+	f2s	conv
+	CAT	cat_op
+	" = "	string
+	CAT	cat_op
+	resultMul	r-val
+	f2s	conv
+	CAT	cat_op
+	OUT	out_op
+	s	l-val
+	"Hello"	string
+	=	assign_op
+	x	r-val
+	0	int
+	>	rel_op
+	m1	label
+	JF	jf
+	"positive"	string
+	OUT	out_op
+	m2	label
+	JMP	jump
+	m1	label
+	:	colon
+	"negative"	string
+	OUT	out_op
+	m2	label
+	:	colon
+	x	r-val
+	DUP	stack_op
+	1	int
+	==	rel_op
+	m4	label
+	JF	jf
+	"one"	string
+	OUT	out_op
+	POP	stack_op
+	m3	label
+	JMP	jump
+	m4	label
+	:	colon
+	DUP	stack_op
+	DUP	stack_op
+	2	int
+	==	rel_op
+	m5	label
+	JF	jf
+	"two or three"	string
+	OUT	out_op
+	POP	stack_op
+	m3	label
+	JMP	jump
+	m5	label
+	:	colon
+	DUP	stack_op
+	DUP	stack_op
+	4	int
+	==	rel_op
+	m6	label
+	JF	jf
+	"four"	string
+	OUT	out_op
+	POP	stack_op
+	m3	label
+	JMP	jump
+	m6	label
+	:	colon
+	DUP	stack_op
+	DUP	stack_op
+	5	int
+	==	rel_op
+	m7	label
+	JF	jf
+	"five"	string
+	OUT	out_op
+	POP	stack_op
+	m3	label
+	JMP	jump
+	m7	label
+	:	colon
+	DUP	stack_op
+	POP	stack_op
+	"other"	string
+	OUT	out_op
+	m3	label
+	JMP	jump
+	m8	label
+	:	colon
+	m3	label
+	:	colon
+	i	l-val
+	1	int
+	=	assign_op
+	m9	label
+	:	colon
+	i	r-val
+	10	int
+	<=	rel_op
+	m10	label
+	JF	jf
+	i	r-val
+	OUT	out_op
+	i	l-val
+	i	r-val
+	1	int
+	+	math_op
+	=	assign_op
+	m9	label
+	JMP	jump
+	m10	label
+	:	colon
+	j	l-val
+	5	int
+	=	assign_op
+	m11	label
+	:	colon
+	j	r-val
+	1	int
+	>=	rel_op
+	m12	label
+	JF	jf
+	j	r-val
+	OUT	out_op
+	j	l-val
+	j	r-val
+	1	int
+	-	math_op
+	=	assign_op
+	m11	label
+	JMP	jump
+	m12	label
+	:	colon
+	k	l-val
+	0	int
+	=	assign_op
+	m13	label
+	:	colon
+	k	l-val
+	k	r-val
+	1	int
+	+	math_op
+	=	assign_op
+	k	r-val
+	3	int
+	<	rel_op
+	m14	label
+	JF	jf
+	m13	label
+	JMP	jump
+	m14	label
+	:	colon
 )
