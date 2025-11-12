@@ -13,8 +13,44 @@
       "x": {
         "type": "Int",
         "initialized": true,
+        "mutable": false,
+        "line": 2
+      },
+      "y": {
+        "type": "Real",
+        "initialized": true,
         "mutable": true,
+        "line": 2
+      },
+      "s": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
         "line": 3
+      },
+      "flag": {
+        "type": "Boolean",
+        "initialized": true,
+        "mutable": true,
+        "line": 4
+      },
+      "i": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 20
+      },
+      "j": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 24
+      },
+      "k": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 28
       }
     }
   }
