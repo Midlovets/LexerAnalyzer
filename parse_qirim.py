@@ -1314,6 +1314,7 @@ def parse_if_statement():
 
 
 def parse_when_statement():
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_when_statement():")
     parse_token("when", "keyword")
@@ -1321,55 +1322,80 @@ def parse_when_statement():
     when_expr_type = parse_expression()
     parse_token(")", "brackets_op")
     parse_token("{", "brackets_op")
-    parse_when_entry(when_expr_type)
+    end_label = create_label("m")
+    parse_when_entry(when_expr_type, end_label, is_first=True)
     while True:
         if numRow > len_tableOfSymb:
             fail_parse("Незакритий оператор when", (None, None, None))
         numLine, lex, tok = get_symb()
         if lex == "}" and tok == "brackets_op":
             break
-        parse_when_entry(when_expr_type)
+        parse_when_entry(when_expr_type, end_label, is_first=False)
+
+    gen_for_PSM(end_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
     parse_token("}", "brackets_op")
     prev_ident()
     return True
 
 
-def parse_when_entry(when_expr_type):
+def parse_when_entry(when_expr_type, end_label, is_first):
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_when_entry():")
-    parse_when_condition(when_expr_type)
+    next_case_label = create_label("m")
+    if not is_first:
+        gen_for_PSM('dup', None, postfix_instructions)
+
+    is_else = parse_when_condition(when_expr_type, next_case_label)
     parse_token('->', 'punct')
+    if not is_else:
+        gen_for_PSM(next_case_label, 'label', postfix_instructions)
+        gen_for_PSM('jf', None, postfix_instructions)
+    else:
+        gen_for_PSM('pop', None, postfix_instructions)
+
     parse_do_block()
+    if not is_else:
+        gen_for_PSM('pop', None, postfix_instructions)
+
+    gen_for_PSM(end_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+    gen_for_PSM(next_case_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
     prev_ident()
     return True
 
 
-def parse_when_condition(when_expr_type):
-    global numRow
+def parse_when_condition(when_expr_type, next_case_label):
+    global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_when_condition():")
-
     _, lex, tok = get_symb()
     if lex == "else" and tok == "keyword":
         numRow += 1
         prev_ident()
-        return
-
+        return True
+    gen_for_PSM('dup', None, postfix_instructions)
     cond_type = parse_expression()
     if cond_type != when_expr_type:
         print(f"    WARNING: Тип умови when ({cond_type}) не співпадає з типом виразу ({when_expr_type})")
-
+    gen_for_PSM('==', None, postfix_instructions)
     while True:
         _, lex, tok = get_symb()
         if lex == "," and tok == "punct":
             numRow += 1
+            gen_for_PSM('dup', None, postfix_instructions)
             cond_type = parse_expression()
             if cond_type != when_expr_type:
                 print(f"    WARNING: Тип умови when ({cond_type}) не співпадає з типом виразу ({when_expr_type})")
+            gen_for_PSM('==', None, postfix_instructions)
+            gen_for_PSM('||', None, postfix_instructions)
         else:
             break
+
     prev_ident()
-    return
+    return False
 
 
 def parse_return_statement():

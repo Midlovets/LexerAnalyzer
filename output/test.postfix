@@ -3,204 +3,81 @@
 
 .vars(
 	x	int
-	flag	bool
-	message	string
-	i	int
-	y	int
-	input	string
-	a	int
-	result	string
-	exp	float
-	j	int
 )
 
 .labels(
-	m1	32
-	m2	36
-	m3	41
-	m4	78
-	m5	53
-	m6	69
-	m7	86
-	m8	120
-	m9	100
-	m10	116
-	m11	158
-	m12	161
+	m1	65
+	m2	16
+	m3	29
+	m4	42
+	m5	55
+	m6	63
 )
 
 .code(
 	x	l-val
-	15	int
-	=	assign_op
-	flag	l-val
-	true	bool
-	=	assign_op
-	message	l-val
-	"Hello, Valeriia"	string
-	=	assign_op
-	message	r-val
-	OUT	out_op
-	message	l-val
-	"Hello, world!"	string
-	=	assign_op
-	message	r-val
-	OUT	out_op
-	x	r-val
-	0	int
-	>	rel_op
-	flag	r-val
-	AND	bool_op
-	false	bool
-	NOT	bool_op
-	OR	bool_op
-	m1	label
-	JF	jf
-	"positive"	string
-	OUT	out_op
-	m2	label
-	JMP	jump
-	m1	label
-	:	colon
-	"negative"	string
-	OUT	out_op
-	m2	label
-	:	colon
-	i	l-val
-	1	int
-	=	assign_op
-	m3	label
-	:	colon
-	i	r-val
 	10	int
-	<=	rel_op
-	m4	label
-	JF	jf
-	i	r-val
-	OUT	out_op
-	j	l-val
-	5	int
 	=	assign_op
-	m5	label
-	:	colon
-	j	r-val
-	1	int
-	>=	rel_op
-	m6	label
-	JF	jf
-	j	r-val
-	OUT	out_op
-	j	l-val
-	j	r-val
-	1	int
-	-	math_op
-	=	assign_op
-	m5	label
-	JMP	jump
-	m6	label
-	:	colon
-	i	l-val
-	i	r-val
-	1	int
-	+	math_op
-	=	assign_op
-	m3	label
-	JMP	jump
-	m4	label
-	:	colon
-	x	l-val
-	5	int
-	=	assign_op
-	y	l-val
-	0	int
-	=	assign_op
-	m7	label
-	:	colon
 	x	r-val
-	y	r-val
-	>	rel_op
-	m8	label
-	JF	jf
-	x	r-val
-	OUT	out_op
-	x	l-val
-	x	r-val
+	DUP	stack_op
 	1	int
-	+	math_op
-	=	assign_op
-	m9	label
-	:	colon
-	y	r-val
-	OUT	out_op
-	y	l-val
-	y	r-val
-	1	int
-	+	math_op
-	=	assign_op
-	y	r-val
-	5	int
-	<=	rel_op
-	m10	label
+	==	rel_op
+	m2	label
 	JF	jf
-	m9	label
+	"one"	string
+	OUT	out_op
+	POP	stack_op
+	m1	label
 	JMP	jump
-	m10	label
+	m2	label
 	:	colon
-	m7	label
-	JMP	jump
-	m8	label
-	:	colon
-	"Done"	string
-	OUT	out_op
-	"Enter a number: "	string
-	OUT	out_op
-	input	l-val
-	INP	inp_op
-	=	assign_op
-	"You entered: "	string
-	OUT	out_op
-	input	r-val
-	OUT	out_op
-	a	l-val
+	DUP	stack_op
+	DUP	stack_op
 	2	int
-	5	int
-	+	math_op
-	3	int
-	+	math_op
-	=	assign_op
-	a	l-val
-	a	r-val
-	4	int
-	*	math_op
-	3	int
-	%	math_op
-	=	assign_op
-	a	r-val
-	OUT	out_op
-	result	l-val
-	a	r-val
-	4	int
-	>	rel_op
-	m11	label
+	==	rel_op
+	m3	label
 	JF	jf
-	"Result is large"	string
-	m12	label
+	"two or three"	string
+	OUT	out_op
+	POP	stack_op
+	m1	label
 	JMP	jump
-	m11	label
+	m3	label
 	:	colon
-	"Result is small"	string
-	m12	label
+	DUP	stack_op
+	DUP	stack_op
+	4	int
+	==	rel_op
+	m4	label
+	JF	jf
+	"four"	string
+	OUT	out_op
+	POP	stack_op
+	m1	label
+	JMP	jump
+	m4	label
 	:	colon
-	=	assign_op
-	result	r-val
+	DUP	stack_op
+	DUP	stack_op
+	5	int
+	==	rel_op
+	m5	label
+	JF	jf
+	"five"	string
 	OUT	out_op
-	exp	l-val
-	2.0	float
-	3.0	float
-	^	pow_op
-	=	assign_op
-	"exp = "	string
+	POP	stack_op
+	m1	label
+	JMP	jump
+	m5	label
+	:	colon
+	DUP	stack_op
+	POP	stack_op
+	"other"	string
 	OUT	out_op
-	exp	r-val
-	OUT	out_op
+	m1	label
+	JMP	jump
+	m6	label
+	:	colon
+	m1	label
+	:	colon
 )

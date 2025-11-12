@@ -15,60 +15,6 @@
         "initialized": true,
         "mutable": true,
         "line": 3
-      },
-      "flag": {
-        "type": "Boolean",
-        "initialized": true,
-        "mutable": true,
-        "line": 4
-      },
-      "message": {
-        "type": "String",
-        "initialized": true,
-        "mutable": true,
-        "line": 5
-      },
-      "i": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": true,
-        "line": 17
-      },
-      "y": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": true,
-        "line": 26
-      },
-      "input": {
-        "type": "String",
-        "initialized": true,
-        "mutable": false,
-        "line": 39
-      },
-      "a": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": true,
-        "line": 43
-      },
-      "result": {
-        "type": "String",
-        "initialized": true,
-        "mutable": false,
-        "line": 47
-      },
-      "exp": {
-        "type": "Real",
-        "initialized": true,
-        "mutable": false,
-        "line": 50
-      },
-      "j": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": true,
-        "line": 19
       }
     }
   }
