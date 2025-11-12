@@ -5,19 +5,25 @@
 	x	int
 	flag	bool
 	message	string
+	i	int
 	y	int
 	input	string
 	a	int
 	exp	float
+	j	int
 )
 
 .labels(
 	m1	32
 	m2	36
-	m3	44
+	m3	41
 	m4	78
-	m5	58
-	m6	74
+	m5	53
+	m6	69
+	m7	86
+	m8	120
+	m9	100
+	m10	116
 )
 
 .code(
@@ -57,18 +63,60 @@
 	OUT	out_op
 	m2	label
 	:	colon
+	i	l-val
+	1	int
+	=	assign_op
+	m3	label
+	:	colon
+	i	r-val
+	10	int
+	<=	rel_op
+	m4	label
+	JF	jf
+	i	r-val
+	OUT	out_op
+	j	l-val
+	5	int
+	=	assign_op
+	m5	label
+	:	colon
+	j	r-val
+	1	int
+	>=	rel_op
+	m6	label
+	JF	jf
+	j	r-val
+	OUT	out_op
+	j	l-val
+	j	r-val
+	1	int
+	-	math_op
+	=	assign_op
+	m5	label
+	JMP	jump
+	m6	label
+	:	colon
+	i	l-val
+	i	r-val
+	1	int
+	+	math_op
+	=	assign_op
+	m3	label
+	JMP	jump
+	m4	label
+	:	colon
 	x	l-val
 	5	int
 	=	assign_op
 	y	l-val
 	0	int
 	=	assign_op
-	m3	label
+	m7	label
 	:	colon
 	x	r-val
 	y	r-val
 	>	rel_op
-	m4	label
+	m8	label
 	JF	jf
 	x	r-val
 	OUT	out_op
@@ -77,7 +125,7 @@
 	1	int
 	+	math_op
 	=	assign_op
-	m5	label
+	m9	label
 	:	colon
 	y	r-val
 	OUT	out_op
@@ -89,15 +137,15 @@
 	y	r-val
 	5	int
 	<=	rel_op
-	m6	label
+	m10	label
 	JF	jf
-	m5	label
+	m9	label
 	JMP	jump
-	m6	label
+	m10	label
 	:	colon
-	m3	label
+	m7	label
 	JMP	jump
-	m4	label
+	m8	label
 	:	colon
 	"Done"	string
 	OUT	out_op

@@ -28,29 +28,41 @@
         "mutable": true,
         "line": 5
       },
+      "i": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 17
+      },
       "y": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 18
+        "line": 26
       },
       "input": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 31
+        "line": 39
       },
       "a": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 35
+        "line": 43
       },
       "exp": {
         "type": "Real",
         "initialized": true,
         "mutable": false,
-        "line": 39
+        "line": 47
+      },
+      "j": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 19
       }
     }
   }
