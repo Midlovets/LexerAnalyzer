@@ -1812,6 +1812,7 @@ def parse_arguments():
 
 
 def parse_if_expression():
+    global postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_if_expression():")
     numLine, _, _ = get_symb()
@@ -1821,9 +1822,26 @@ def parse_if_expression():
     if cond_type != 'Boolean':
         fail_semantic("неправильний тип умови", (numLine, "if-expression", cond_type))
     parse_token(")", "brackets_op")
+
+    else_label = create_label("m")
+    endif_label = create_label("m")
+
+    gen_for_PSM(else_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
     then_type = parse_expression()
+
+    gen_for_PSM(endif_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    gen_for_PSM(else_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     parse_token("else", "keyword")
     else_type = parse_expression()
+
+    gen_for_PSM(endif_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
 
     if then_type != else_type:
         if not ((then_type == 'Real' and else_type == 'Int') or (then_type == 'Int' and else_type == 'Real')):

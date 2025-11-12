@@ -9,6 +9,7 @@
 	y	int
 	input	string
 	a	int
+	result	string
 	exp	float
 	j	int
 )
@@ -24,6 +25,8 @@
 	m8	120
 	m9	100
 	m10	116
+	m11	158
+	m12	161
 )
 
 .code(
@@ -173,6 +176,23 @@
 	%	math_op
 	=	assign_op
 	a	r-val
+	OUT	out_op
+	result	l-val
+	a	r-val
+	4	int
+	>	rel_op
+	m11	label
+	JF	jf
+	"Result is large"	string
+	m12	label
+	JMP	jump
+	m11	label
+	:	colon
+	"Result is small"	string
+	m12	label
+	:	colon
+	=	assign_op
+	result	r-val
 	OUT	out_op
 	exp	l-val
 	2.0	float

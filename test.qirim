@@ -44,6 +44,9 @@ fun main() {
     a = a * 4 % 3
     print(a)
 
+    val result: String = if (a > 4) "Result is large" else "Result is small"
+    print(result)
+
     val exp: Real = 2.0 ** 3.0
     print("exp = ")
     print(exp)

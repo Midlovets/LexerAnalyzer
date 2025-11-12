@@ -52,11 +52,17 @@
         "mutable": true,
         "line": 43
       },
+      "result": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 47
+      },
       "exp": {
         "type": "Real",
         "initialized": true,
         "mutable": false,
-        "line": 47
+        "line": 50
       },
       "j": {
         "type": "Int",
