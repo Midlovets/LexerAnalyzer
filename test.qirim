@@ -1,5 +1,13 @@
+fun foo(value : Int) : String{
+
+    return "My name " + value
+}
+
+fun boo(value : Int) : Int{
+    return value + 100
+}
+
 fun main() {
-    var a = "Name";
-    var b = "Surname";
-    print(a);
+    print(foo(12))
+    print(boo(12))
 }

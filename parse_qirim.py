@@ -36,19 +36,24 @@ postfix_instructions = []
 
 
 # Запис POSTIX-файлу
-def generate_postfix_file(input_file_name):
+def generate_postfix_file(input_file_name, func_name):
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
     base_name = os.path.splitext(os.path.basename(input_file_name))[0]
-    output_file = os.path.join(OUTPUT_DIR, f"{base_name}.postfix")
+    if func_name == "main":
+        output_file = os.path.join(OUTPUT_DIR, f"{base_name}.postfix")
+    else:
+        output_file = os.path.join(OUTPUT_DIR, f"{base_name}${func_name}.postfix")
 
     header = ".target: Postfix Machine\n.version: 0.3\n\n"
 
     # Секція змінних
     vars_section = ".vars(\n"
-    if 'main' in tableOfVarByFunction:
-        for var_name, var_info in tableOfVarByFunction['main'].items():
+    vars_to_write = tableOfVarByFunction.get(func_name, {})
+
+    if vars_to_write:
+        for var_name, var_info in vars_to_write.items():
             var_type = var_info['type'].lower()
             if var_type == "int":
                 psm_type = "int"
@@ -60,6 +65,39 @@ def generate_postfix_file(input_file_name):
                 psm_type = "bool"
             vars_section += f"\t{var_name}\t{psm_type}\n"
     vars_section += ")\n\n"
+
+    glob_vars_section = ".globVarList(\n\t\n)\n\n"
+    funcs_section = ".funcs(\n"
+
+    # Ми заповнюємо .funcs списком УСІХ ІНШИХ функцій,
+    # щоб цей модуль знав, які функції він може викликати.
+    if tableOfFunc:  # tableOfFunc - це глобальна таблиця
+        for f_name, f_info in tableOfFunc.items():
+            # Функція не повинна оголошувати саму себе у своєму .funcs
+            if f_name == func_name:
+                continue
+
+            # Отримуємо тип повернення для PSM
+            return_type = f_info['return_type'].lower()
+            if return_type == "int":
+                psm_type = "int"
+            elif return_type == "real":
+                psm_type = "float"
+            elif return_type == "string":
+                psm_type = "string"
+            elif return_type == "boolean":
+                psm_type = "bool"
+            elif return_type == "unit":
+                psm_type = "void"
+            else:
+                psm_type = "void"  # За замовчуванням
+
+            # Отримуємо кількість параметрів
+            num_params = len(f_info['params'])  # f_info['params'] - це список
+
+            funcs_section += f"\t{f_name}\t{psm_type}\t{num_params}\n"
+
+    funcs_section += ")\n\n"
 
     # Секція міток
     labels_section = ".labels(\n"
@@ -92,7 +130,7 @@ def generate_postfix_file(input_file_name):
     code_section += ")"
 
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(header + vars_section + labels_section + code_section)
+        f.write(header + vars_section + glob_vars_section + funcs_section + labels_section + code_section)
 
     print(f"\nINFO: Постфіксний код збережено у файл: {output_file}")
     return output_file
@@ -564,12 +602,19 @@ def parse_main_function():
         del tableOfVar[var_name]
         print(f"    SEMANTIC: Видалено локальну змінну main: {var_name}")
     currentFunction = None
+    print("\nГенерація ПОЛІЗ-коду для main")
+    generate_postfix_file("test.qirim", "main")
+
     prev_ident()
     return True
 
 
 def parse_function_declaration():
     global numRow, currentFunction, loop_variables
+
+    global postfix_instructions
+    postfix_instructions = []
+
     indent = next_ident()
     print(f"{indent}parse_function_declaration():")
     parse_token("fun", "keyword")
@@ -629,6 +674,8 @@ def parse_function_declaration():
         print(f"    SEMANTIC: Видалено локальну змінну функції {function_name}: {var_name}")
 
     currentFunction = None
+    print(f"\nГенерація ПОЛІЗ-коду для {function_name}")
+    generate_postfix_file("test.qirim", function_name)
     prev_ident()
     return True
 
@@ -1759,15 +1806,6 @@ def parse_primary_expr():
         prev_ident()
         return result_type
 
-    if tok == "identifier":
-        trace(f"{indent}  Variable: {lex}")
-        if not lex in tableOfVar:
-            fail_semantic("використання неоголошеної змінної", (numLine, lex))
-        gen_for_PSM(lex, 'r-val', postfix_instructions)
-        numRow += 1
-        prev_ident()
-        return get_type_var(lex)
-
     if tok == "identifier" or (lex.startswith("`") and lex.endswith("`")) or (
             tok == 'keyword' and lex in ('readLine', 'print')):
         trace(f"{indent}Identifier/FunctionCall/Print: {lex}")
@@ -1793,6 +1831,7 @@ def parse_primary_expr():
 
                 func_info = tableOfFunc[identifier]
                 arg_types = parse_arguments()
+                gen_for_PSM(identifier, 'call', postfix_instructions)
                 parse_token(")", "brackets_op")
 
                 expected_params = len(func_info['params'])
@@ -1820,6 +1859,7 @@ def parse_primary_expr():
             if not is_var_initialized(identifier):
                 fail_semantic("використання неініціалізованої змінної", (numLine, identifier))
 
+            gen_for_PSM(identifier, 'r-val', postfix_instructions)
             prev_ident()
             return get_type_var(identifier)
 
@@ -1853,6 +1893,7 @@ def parse_function_call():
 
     parse_token("(", "brackets_op")
     arg_types = parse_arguments()
+    gen_for_PSM(func_name, 'call', postfix_instructions)
     parse_token(")", "brackets_op")
 
     # Перевірка параметрів
@@ -1972,7 +2013,7 @@ def parse_return_statement():
         if expected_type != return_type:
             if not (expected_type == 'Real' and return_type == 'Int'):
                 fail_semantic("невідповідність типу return", (numLine, currentFunction, expected_type, return_type))
-
+    gen_for_PSM('return', None, postfix_instructions)
     prev_ident()
     return 'return'
 
@@ -1992,7 +2033,6 @@ if len(tableOfSymb) > 0 and FSuccess[1]:
         if success:  # Якщо синтаксичний та семантичний аналіз успішний
             print("\nГенерація ПОЛІЗ-коду")
             postfix_file = os.path.join(OUTPUT_DIR, "test.postfix")
-            generate_postfix_file("test.qirim")
             print(f"\nPOSTFIX-код згенеровано у файл: {postfix_file}")
     except Exception as e:
         print(f"\nПОМИЛКА: {e}")

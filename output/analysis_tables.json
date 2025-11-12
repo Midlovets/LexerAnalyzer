@@ -1,27 +1,54 @@
 {
   "global_vars": {},
   "functions": {
+    "foo": {
+      "params": [
+        [
+          "value",
+          "Int",
+          false
+        ]
+      ],
+      "return_type": "String",
+      "line": 1,
+      "order": 0
+    },
+    "boo": {
+      "params": [
+        [
+          "value",
+          "Int",
+          false
+        ]
+      ],
+      "return_type": "Int",
+      "line": 6,
+      "order": 1
+    },
     "main": {
       "params": [],
       "return_type": "Unit",
-      "line": 1,
-      "order": 0
+      "line": 10,
+      "order": 2
     }
   },
   "function_vars": {
-    "main": {
-      "a": {
-        "type": "String",
+    "foo": {
+      "value": {
+        "type": "Int",
         "initialized": true,
-        "mutable": true,
-        "line": 2
-      },
-      "b": {
-        "type": "String",
-        "initialized": true,
-        "mutable": true,
-        "line": 3
+        "mutable": false,
+        "line": 1
       }
-    }
+    },
+    "boo": {
+      "value": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 6
+      }
+    },
+    "main": {}
   }
 }
