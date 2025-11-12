@@ -10,11 +10,17 @@
   },
   "function_vars": {
     "main": {
-      "i": {
-        "type": "Int",
+      "a": {
+        "type": "String",
         "initialized": true,
         "mutable": true,
-        "line": 10
+        "line": 2
+      },
+      "b": {
+        "type": "String",
+        "initialized": true,
+        "mutable": true,
+        "line": 3
       }
     }
   }

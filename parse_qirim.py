@@ -977,21 +977,19 @@ def parse_output_statement():
     print(f"{indent}parse_output_statement():")
     parse_token("print", "keyword")
     parse_token("(", "brackets_op")
+
     numLine, lex, tok = get_symb()
+
+    # Якщо дужки не порожні, парсимо вираз
     if lex != ")" or tok != "brackets_op":
-        if tok == "string_literal" or tok == "string_const":
-            gen_for_PSM(lex, 'string', postfix_instructions)
-            numRow += 1
-        elif tok == "identifier":
-            if not get_type_var(lex):
-                fail_semantic('використання неоголошеної змінної', (numLine, lex))
-            gen_for_PSM(lex, 'r-val', postfix_instructions)
-            numRow += 1
-        else:
-            parse_expression()
+        # Ця одна функція коректно обробить 'a + " " + b'
+        parse_expression()
 
         # Генеруємо операцію виводу
         gen_for_PSM('print', None, postfix_instructions)
+
+    # Тепер parse_token(')') буде викликано після того,
+    # як parse_expression() обробить весь вираз
     parse_token(")", "brackets_op")
     prev_ident()
     return True
@@ -1508,10 +1506,19 @@ def parse_add_expr():
             print(f"{indent}Арифметичний оператор: {lex}")
             right_type = parse_mult_expr()
             result_type = get_type_op(left_type, operator, right_type)
+
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
-            # Генеруємо код для операції
-            gen_for_PSM(operator, None, postfix_instructions)
+
+            # --- ОНОВЛЕНА ЛОГІКА ---
+            # Перевіряємо, чи це конкатенація рядків
+            if operator == '+' and result_type == 'String':
+                gen_for_PSM(None, 'concat', postfix_instructions)  # Генеруємо 'CAT cat_op'
+            else:
+                # Це математична операція
+                gen_for_PSM(operator, None, postfix_instructions)  # Генеруємо '+ math_op' або '- math_op'
+            # --- КІНЕЦЬ ОНОВЛЕНОЇ ЛОГІКИ ---
+
             left_type = result_type
         else:
             break
