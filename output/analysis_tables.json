@@ -34,23 +34,35 @@
         "mutable": true,
         "line": 4
       },
-      "i": {
-        "type": "Int",
+      "name": {
+        "type": "String",
         "initialized": true,
-        "mutable": true,
-        "line": 20
+        "mutable": false,
+        "line": 5
       },
-      "j": {
+      "result": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 7
+      },
+      "i": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
         "line": 24
       },
-      "k": {
+      "j": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
         "line": 28
+      },
+      "k": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 32
       }
     }
   }

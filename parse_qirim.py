@@ -382,18 +382,28 @@ def add_func_to_table(func_name, params, return_type, numLine):
 
 def get_type_op(left_type, op, right_type):
     if op in ('+', '-', '*', '/', '%', '**'):
-        if op == '+' and left_type == 'String' and right_type == 'String':
-            return 'String'
+
+        if op == '+':
+            if left_type == 'String' and right_type == 'String':
+                return 'String'
+            if left_type == 'String' and right_type == 'Int':
+                return 'String'
+            if left_type == 'String' and right_type == 'Real':
+                return 'String'
+            if left_type == 'Int' and right_type == 'String':
+                return 'String'
+            if left_type == 'Real' and right_type == 'String':
+                return 'String'
         if left_type in ('Int', 'Real') and right_type in ('Int', 'Real'):
-            if left_type == 'Real' or right_type == 'Real':
-                return 'Real'
-            return 'Int'
+            if left_type == 'Int' and right_type == 'Int':
+                return 'Int'
+            return 'Real'
         return 'type_error'
 
     if op in ('==', '!=', '<', '<=', '>', '>='):
-        if left_type == right_type and left_type in ('Int', 'Real', 'Boolean', 'String'):
-            return 'Boolean'
         if left_type in ('Int', 'Real') and right_type in ('Int', 'Real'):
+            return 'Boolean'
+        if left_type == right_type and left_type in ('Boolean', 'String'):
             return 'Boolean'
         return 'type_error'
 
@@ -402,6 +412,44 @@ def get_type_op(left_type, op, right_type):
             return 'Boolean'
         return 'type_error'
     return 'type_error'
+
+
+def auto_convert_types(left_type, right_type, postfix_instructions, operator='+'):
+    if operator == '+':
+        if left_type == 'String' and right_type == 'Int':
+            postfix_instructions.append(('i2s', 'conv'))
+            return left_type, 'String'
+
+        if left_type == 'String' and right_type == 'Real':
+            postfix_instructions.append(('f2s', 'conv'))
+            return left_type, 'String'
+
+        if left_type == 'Int' and right_type == 'String':
+            if len(postfix_instructions) >= 1:
+                right_operand = postfix_instructions.pop()
+                postfix_instructions.append(('i2s', 'conv'))
+                postfix_instructions.append(right_operand)
+            return 'String', right_type
+
+        if left_type == 'Real' and right_type == 'String':
+            if len(postfix_instructions) >= 1:
+                right_operand = postfix_instructions.pop()
+                postfix_instructions.append(('f2s', 'conv'))
+                postfix_instructions.append(right_operand)
+            return 'String', right_type
+
+    if left_type == 'Int' and right_type == 'Real':
+        if len(postfix_instructions) >= 1:
+            right_operand = postfix_instructions.pop()
+            postfix_instructions.append(('i2f', 'conv'))
+            postfix_instructions.append(right_operand)
+        return 'Real', right_type
+
+    elif left_type == 'Real' and right_type == 'Int':
+        postfix_instructions.append(('i2f', 'conv'))
+        return left_type, 'Real'
+
+    return left_type, right_type
 
 
 def parse_token(lexeme, token):
@@ -794,24 +842,23 @@ def parse_declaration(is_mutable):
 
     if lex == "=" and tok == "assign_op":
         numRow += 1
-        # Генеруємо l-val для змінної перед обробкою виразу
+
         gen_for_PSM(var_name, 'l-val', postfix_instructions)
 
-        # Парсимо вираз і отримуємо його тип
         expr_type = parse_expression()
 
-        # Якщо тип змінної не був вказаний явно через :, використовуємо тип виразу
         if var_type is None:
             var_type = expr_type
-        # Перевіряємо сумісність типів
         elif var_type != expr_type:
-            if not (var_type == 'Real' and expr_type == 'Int'):
+            if var_type == 'Real' and expr_type == 'Int':
+                gen_for_PSM('i2f', 'conv', postfix_instructions)
+            else:
                 fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
 
-        # Генеруємо операцію присвоєння
         gen_for_PSM('=', 'assign_op', postfix_instructions)
         is_initialized = True
     elif var_type is None:
+
         fail_parse("несумісність токенів", (numLine, lex, tok, "var/val, : або =", 'punct або assign_op'))
 
     add_var_to_table(var_name, var_type, is_mutable, is_initialized, numLine)
@@ -929,17 +976,14 @@ def parse_assignment_statement():
 
     parse_token("=", "assign_op")
 
-    # Генеруємо l-val для змінної перед обчисленням виразу
     gen_for_PSM(var_name, 'l-val', postfix_instructions)
 
-    # Парсимо вираз справа від = і отримуємо його тип
     expr_type = parse_expression()
 
     if var_type != expr_type:
         if not (var_type == 'Real' and expr_type == 'Int'):
             fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
 
-    # Генеруємо операцію присвоєння
     gen_for_PSM('=', 'assign_op', postfix_instructions)
 
     set_var_initialized(var_name)
@@ -989,20 +1033,12 @@ def parse_output_statement():
     parse_token("print", "keyword")
     parse_token("(", "brackets_op")
     numLine, lex, tok = get_symb()
-    if lex != ")" or tok != "brackets_op":
-        if tok == "string_literal" or tok == "string_const":
-            gen_for_PSM(lex, 'string', postfix_instructions)
-            numRow += 1
-        elif tok == "identifier":
-            if not get_type_var(lex):
-                fail_semantic('використання неоголошеної змінної', (numLine, lex))
-            gen_for_PSM(lex, 'r-val', postfix_instructions)
-            numRow += 1
-        else:
-            parse_expression()
 
-        # Генеруємо операцію виводу
+    if lex != ")" or tok != "brackets_op":
+        parse_expression()
+
         gen_for_PSM('print', None, postfix_instructions)
+
     parse_token(")", "brackets_op")
     prev_ident()
     return True
@@ -1478,6 +1514,7 @@ def parse_equality_expr():
     indent = next_ident()
     trace(f"{indent}parse_equality_expr():")
     left_type = parse_relational_expr()
+
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("==", "!=") and tok == "rel_op":
@@ -1485,13 +1522,18 @@ def parse_equality_expr():
             numRow += 1
             print(f"{indent}Оператор порівняння: {lex}")
             right_type = parse_relational_expr()
+
+            left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
+
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+
             gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
+
     prev_ident()
     return left_type
 
@@ -1501,6 +1543,7 @@ def parse_relational_expr():
     indent = next_ident()
     trace(f"{indent}parse_relational_expr():")
     left_type = parse_add_expr()
+
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("<", "<=", ">", ">=") and tok == "rel_op":
@@ -1508,13 +1551,18 @@ def parse_relational_expr():
             numRow += 1
             print(f"{indent}Оператор відношення: {lex}")
             right_type = parse_add_expr()
+
+            left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
+
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
+
             gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
+
     prev_ident()
     return left_type
 
@@ -1531,11 +1579,18 @@ def parse_add_expr():
             numRow += 1
             print(f"{indent}Арифметичний оператор: {lex}")
             right_type = parse_mult_expr()
+
+            left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions, operator)
+
             result_type = get_type_op(left_type, operator, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
-            # Генеруємо код для операції
-            gen_for_PSM(operator, None, postfix_instructions)
+
+            if result_type == 'String':
+                postfix_instructions.append(('CAT', 'cat_op'))
+            else:
+                gen_for_PSM(operator, None, postfix_instructions)
+
             left_type = result_type
         else:
             break
@@ -1551,7 +1606,7 @@ def parse_mult_expr():
     while True:
         numLine, lex, tok = get_symb()
         if tok == "mult_op":
-            operator = lex  # Зберігаємо оператор
+            operator = lex
             numRow += 1
             print(f"{indent}Арифметичний оператор: {lex}")
 
@@ -1565,11 +1620,11 @@ def parse_mult_expr():
                         fail_semantic("ділення на нуль", (numLine, operator))
                     elif right_tok == 'real_const' and float(right_lex) == 0.0:
                         fail_semantic("ділення на нуль", (numLine, operator))
-
+            left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
             result_type = get_type_op(left_type, operator, right_type)
+
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
-            # Генеруємо код для операції
             gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
@@ -1583,21 +1638,26 @@ def parse_power_expr():
     indent = next_ident()
     trace(f"{indent}parse_power_expr():")
     left_type = parse_unary_expr()
+
     while True:
         numLine, lex, tok = get_symb()
         if tok == "exp_op":
-            operator = lex  # Зберігаємо оператор
+            operator = lex
             numRow += 1
             print(f"{indent}Оператор піднесення до степеня: {lex}")
             right_type = parse_unary_expr()
+
+            left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
+
             result_type = get_type_op(left_type, operator, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
-            # Генеруємо код для операції
+
             gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
+
     prev_ident()
     return left_type
 
@@ -1615,18 +1675,17 @@ def parse_unary_expr():
 
     expr_type = parse_primary_expr()
 
-    # Перевірка типу для унарних операторів
     if unary_op:
         if unary_op in ('+', '-'):
             if expr_type not in ('Int', 'Real'):
                 print(f"    WARNING: Унарний {unary_op} застосовано до типу {expr_type}")
-            # Генеруємо код для унарного мінуса
+
             if unary_op == '-':
                 gen_for_PSM('neg', None, postfix_instructions)
         elif unary_op == '!':
             if expr_type != 'Boolean':
                 print(f"    WARNING: Унарний ! застосовано до типу {expr_type}")
-            # Генеруємо код для логічного NOT
+
             gen_for_PSM('!', None, postfix_instructions)
 
     prev_ident()
@@ -1708,12 +1767,12 @@ def parse_primary_expr():
                 if lex3 != ")" or tok3 != "brackets_op":
                     fail_parse("readLine() має бути без параметрів", (numLine3, lex3, tok3, ")", "brackets_op"))
                 parse_token(")", "brackets_op")
-                # Генеруємо інструкцію введення, яка помістить рядок на стек
+
                 gen_for_PSM('readLine', None, postfix_instructions)
                 prev_ident()
                 return 'String'
             else:
-                # Виклик функції
+
                 if identifier not in tableOfFunc:
                     fail_semantic("використання неоголошеної функції", (numLine, identifier))
 
@@ -1721,7 +1780,6 @@ def parse_primary_expr():
                 arg_types = parse_arguments()
                 parse_token(")", "brackets_op")
 
-                # Перевірка кількості параметрів
                 expected_params = len(func_info['params'])
                 actual_params = len(arg_types)
 
@@ -1730,7 +1788,6 @@ def parse_primary_expr():
                     fail_semantic("невідповідність кількості параметрів",
                                   (numLine, identifier, expected_params, actual_params))
 
-                # Перевірка типів параметрів
                 for i, (arg_type, param_info) in enumerate(zip(arg_types, func_info['params'])):
                     param_name, param_type, has_default = param_info
                     if arg_type != param_type:
@@ -1741,7 +1798,7 @@ def parse_primary_expr():
                 prev_ident()
                 return func_info['return_type']
         else:
-            # Просто змінна
+
             if identifier not in tableOfVar:
                 fail_semantic("використання неоголошеної змінної", (numLine, identifier))
 

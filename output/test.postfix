@@ -6,26 +6,28 @@
 	y	float
 	s	string
 	flag	bool
+	name	string
+	result	string
 	i	int
 	j	int
 	k	int
 )
 
 .labels(
-	m1	28
-	m2	32
-	m3	94
-	m4	45
-	m5	58
-	m6	71
-	m7	84
-	m8	92
-	m9	99
-	m10	115
-	m11	120
-	m12	136
-	m13	141
-	m14	155
+	m1	37
+	m2	41
+	m3	103
+	m4	54
+	m5	67
+	m6	80
+	m7	93
+	m8	101
+	m9	108
+	m10	124
+	m11	129
+	m12	145
+	m13	150
+	m14	164
 )
 
 .code(
@@ -33,13 +35,22 @@
 	5	int
 	=	assign_op
 	y	l-val
-	3.0	float
+	3	int
+	i2f	conv
 	=	assign_op
 	s	l-val
-	"Hello"	string
+	"Hello, "	string
 	=	assign_op
 	flag	l-val
 	true	bool
+	=	assign_op
+	name	l-val
+	"Valeriia"	string
+	=	assign_op
+	result	l-val
+	"Hello, "	string
+	"Anfisa"	string
+	CAT	cat_op
 	=	assign_op
 	x	r-val
 	0	int

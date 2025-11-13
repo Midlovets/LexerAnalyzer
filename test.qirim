@@ -1,7 +1,11 @@
 fun main() {
-    val x: Int = 5; var y: Real = 3.0
-    val s: String = "Hello"
+    val x: Int = 5; var y: Real = 3
+    val s: String = "Hello, "
     var flag: Boolean = true
+    val name = "Valeriia"
+
+    val result = "Hello, " + "Anfisa"
+    print()
 
     if (x > 0 && flag || !false) {
         print("positive")
