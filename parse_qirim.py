@@ -27,6 +27,8 @@ tableOfFunc = {}
 tableOfVarByFunction = {}
 loop_variables = {}
 
+true_global_vars = set()
+
 currentFunction = None
 TRACE = False
 OUTPUT_DIR = "output"  # Директорія для запису таблиць у файл
@@ -36,9 +38,13 @@ postfix_instructions = []
 
 function_calls = {}
 
+global_vars_usage = {}
+global_init_instructions = []
+
 
 # Запис POSTIX-файлу
 def generate_postfix_file(input_file_name, func_name):
+    global global_init_instructions
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
@@ -52,7 +58,18 @@ def generate_postfix_file(input_file_name, func_name):
 
     # Секція змінних
     vars_section = ".vars(\n"
-    vars_to_write = tableOfVarByFunction.get(func_name, {})
+
+    if func_name == 'main':
+        vars_to_write = {}
+        for var_name, var_info in tableOfVar.items():
+            vars_to_write[var_name] = var_info
+
+        if func_name in tableOfVarByFunction:
+            for var_name, var_info in tableOfVarByFunction[func_name].items():
+                vars_to_write[var_name] = var_info
+
+    else:
+        vars_to_write = tableOfVarByFunction.get(func_name, {})
 
     if vars_to_write:
         for var_name, var_info in vars_to_write.items():
@@ -68,7 +85,12 @@ def generate_postfix_file(input_file_name, func_name):
             vars_section += f"\t{var_name}\t{psm_type}\n"
     vars_section += ")\n\n"
 
-    glob_vars_section = ".globVarList(\n)\n\n"
+    glob_vars_section = ".globVarList(\n"
+    if func_name != "main" and func_name in global_vars_usage:
+        used_globals = global_vars_usage[func_name]
+        for var_name in sorted(used_globals):
+            glob_vars_section += f"\t{var_name}\n"
+    glob_vars_section += ")\n\n"
 
     funcs_section = ".funcs(\n"
 
@@ -102,17 +124,22 @@ def generate_postfix_file(input_file_name, func_name):
     # Секція міток
     labels_section = ".labels(\n"
     label_positions = {}
+    code_offset = 0
+
+    if func_name == "main" and global_init_instructions:
+        code_offset = len(global_init_instructions)
+
     for idx, (instr, opt) in enumerate(postfix_instructions):
         if opt == 'label' and instr not in label_positions:
             colon_idx = idx + 1
             if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
-                label_positions[instr] = colon_idx + 1
+                label_positions[instr] = colon_idx + 1 + code_offset
             else:
                 continue
         elif opt == 'label' and instr in label_positions:
             colon_idx = idx + 1
             if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
-                label_positions[instr] = colon_idx + 1
+                label_positions[instr] = colon_idx + 1 + code_offset
 
     def get_label_number(label_name):
         match = re.search(r'\d+', label_name)
@@ -125,6 +152,10 @@ def generate_postfix_file(input_file_name, func_name):
 
     # Секція коду
     code_section = ".code(\n"
+    if func_name == "main" and global_init_instructions:
+        for instr, opt in global_init_instructions:
+            code_section += f"\t{instr}\t{opt}\n"
+
     for instr, opt in postfix_instructions:
         code_section += f"\t{instr}\t{opt}\n"
     code_section += ")"
@@ -134,6 +165,32 @@ def generate_postfix_file(input_file_name, func_name):
 
     print(f"\nINFO: Постфіксний код збережено у файл: {output_file}")
     return output_file
+
+
+def track_global_var_usage(var_name):
+    global currentFunction, tableOfVar, tableOfFunc, global_vars_usage
+    if not currentFunction or currentFunction == "main":
+        return
+
+    if currentFunction in tableOfFunc:
+        for param_name, _, _ in tableOfFunc[currentFunction]['params']:
+            if param_name == var_name:
+                return
+
+    if var_name not in tableOfVar:
+        return
+
+    var_line = tableOfVar[var_name]['line']
+    func_line = tableOfFunc[currentFunction]['line']
+
+    if var_line > func_line:
+        return
+
+    if currentFunction not in global_vars_usage:
+        global_vars_usage[currentFunction] = set()
+
+    global_vars_usage[currentFunction].add(var_name)
+    print(f"    SEMANTIC: Функція '{currentFunction}' використовує глобальну змінну '{var_name}'")
 
 
 def save_tables_to_file():
@@ -514,6 +571,9 @@ def parse_token(lexeme, token):
 
 
 def parse_program():
+    global global_vars_usage, true_global_vars
+    global_vars_usage = {}
+    true_global_vars = set()
     try:
         indent = next_ident()
         print(f"{indent}parse_program():")
@@ -533,6 +593,9 @@ def parse_program():
                 parse_variable_declarations()
             else:
                 break
+
+        true_global_vars = set(tableOfVar.keys())
+
         if not found_main:
             print("\nАВАРІЙНЕ ЗАВЕРШЕННЯ ПРОГРАМИ! У даній програмі немає точки входу fun main() {...}.")
             exit(2001)
@@ -611,9 +674,7 @@ def parse_function_declaration():
         func_line = numLine
         currentFunction = function_name
         loop_variables[function_name] = {}
-
         function_calls[function_name] = set()
-
         numRow += 1
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, "identifier", "identifier"))
@@ -651,8 +712,12 @@ def parse_function_declaration():
         fail_parse("несумісність токенів", (numLine, lex, tok, "= або {", "(assign_op або brackets_op)"))
 
     func_local_vars = {}
+    for param_name, param_type, has_default in params:
+        if param_name in tableOfVar:
+            func_local_vars[param_name] = tableOfVar[param_name].copy()
+
     for var_name in tableOfVar.keys():
-        if var_name not in vars_before_function:
+        if var_name not in vars_before_function and var_name not in func_local_vars:
             func_local_vars[var_name] = tableOfVar[var_name].copy()
 
     for var_name, var_info in loop_variables[function_name].items():
@@ -871,7 +936,7 @@ def parse_variable_declaration():
 
 
 def parse_declaration(is_mutable):
-    global numRow, postfix_instructions
+    global numRow, postfix_instructions, global_init_instructions
     indent = next_ident()
     print(f"{indent}parse_declaration():")
     numLine, lex, tok = get_symb()
@@ -895,6 +960,13 @@ def parse_declaration(is_mutable):
     if lex == "=" and tok == "assign_op":
         numRow += 1
 
+        is_global = (currentFunction is None)
+        original_postfix_instructions = None
+
+        if is_global:
+            original_postfix_instructions = postfix_instructions
+            postfix_instructions = global_init_instructions
+
         gen_for_PSM(var_name, 'l-val', postfix_instructions)
 
         expr_type = parse_expression()
@@ -909,8 +981,11 @@ def parse_declaration(is_mutable):
 
         gen_for_PSM('=', 'assign_op', postfix_instructions)
         is_initialized = True
-    elif var_type is None:
 
+        if is_global:
+            postfix_instructions = original_postfix_instructions
+
+    elif var_type is None:
         fail_parse("несумісність токенів", (numLine, lex, tok, "var/val, : або =", 'punct або assign_op'))
 
     add_var_to_table(var_name, var_type, is_mutable, is_initialized, numLine)
@@ -1020,6 +1095,7 @@ def parse_assignment_statement():
     if not is_var_mutable(var_name):
         fail_semantic("присвоєння val змінній", (numLine, var_name))
 
+    track_global_var_usage(var_name)
     var_type = get_type_var(var_name)
 
     parse_token("=", "assign_op")
@@ -1847,12 +1923,13 @@ def parse_primary_expr():
                 prev_ident()
                 return func_info['return_type']
         else:
-
             if identifier not in tableOfVar:
                 fail_semantic("використання неоголошеної змінної", (numLine, identifier))
 
             if not is_var_initialized(identifier):
                 fail_semantic("використання неініціалізованої змінної", (numLine, identifier))
+
+            track_global_var_usage(identifier)
 
             gen_for_PSM(identifier, 'r-val', postfix_instructions)
             prev_ident()

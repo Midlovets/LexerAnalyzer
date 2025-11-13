@@ -2,10 +2,10 @@
 .version: 0.3
 
 .vars(
+	name	string
 	x	int
 	y	float
 	s	string
-	name1	string
 	flag	bool
 	result	string
 	i	int
@@ -30,25 +30,28 @@
 )
 
 .labels(
-	m1	39
-	m2	43
-	m3	106
-	m4	56
-	m5	69
-	m6	82
-	m7	96
-	m8	104
-	m9	111
-	m10	130
-	m11	137
-	m12	156
-	m13	163
-	m14	177
-	m15	199
-	m16	202
+	m3	39
+	m4	43
+	m5	110
+	m6	56
+	m7	73
+	m8	86
+	m9	100
+	m10	108
+	m11	115
+	m12	134
+	m13	141
+	m14	160
+	m15	167
+	m16	181
+	m17	203
+	m18	206
 )
 
 .code(
+	name	l-val
+	"Lero4ka"	string
+	=	assign_op
 	x	l-val
 	8	int
 	NEG	math_op
@@ -59,18 +62,15 @@
 	s	l-val
 	"Hello"	string
 	=	assign_op
-	name1	l-val
-	"Valeriia"	string
-	=	assign_op
 	flag	l-val
 	true	bool
 	=	assign_op
 	result	l-val
 	s	r-val
-	name1	r-val
+	name	r-val
 	CAT	cat_op
 	=	assign_op
-	name1	r-val
+	result	r-val
 	hello	CALL
 	x	r-val
 	0	int
@@ -80,90 +80,94 @@
 	false	bool
 	NOT	bool_op
 	OR	bool_op
-	m1	label
+	m3	label
 	JF	jf
 	"positive"	string
 	OUT	out_op
-	m2	label
+	m4	label
 	JMP	jump
-	m1	label
+	m3	label
 	:	colon
 	"negative"	string
 	OUT	out_op
-	m2	label
+	m4	label
 	:	colon
 	x	r-val
 	DUP	stack_op
 	1	int
 	==	rel_op
-	m4	label
+	m6	label
 	JF	jf
 	"one"	string
 	OUT	out_op
 	POP	stack_op
-	m3	label
+	m5	label
 	JMP	jump
-	m4	label
+	m6	label
 	:	colon
 	DUP	stack_op
 	DUP	stack_op
 	2	int
 	==	rel_op
-	m5	label
+	SWAP	stack_op
+	3	int
+	==	rel_op
+	OR	bool_op
+	m7	label
 	JF	jf
 	"two or three"	string
 	OUT	out_op
 	POP	stack_op
-	m3	label
-	JMP	jump
 	m5	label
+	JMP	jump
+	m7	label
 	:	colon
 	DUP	stack_op
 	DUP	stack_op
 	4	int
 	==	rel_op
-	m6	label
+	m8	label
 	JF	jf
 	"four"	string
 	OUT	out_op
 	POP	stack_op
-	m3	label
+	m5	label
 	JMP	jump
-	m6	label
+	m8	label
 	:	colon
 	DUP	stack_op
 	DUP	stack_op
 	5	int
 	==	rel_op
-	m7	label
+	m9	label
 	JF	jf
 	age	l-val
 	20	int
 	=	assign_op
 	POP	stack_op
-	m3	label
+	m5	label
 	JMP	jump
-	m7	label
+	m9	label
 	:	colon
 	DUP	stack_op
 	POP	stack_op
 	"other"	string
 	OUT	out_op
-	m3	label
+	m5	label
 	JMP	jump
-	m8	label
+	m10	label
 	:	colon
-	m3	label
+	m5	label
 	:	colon
 	i	l-val
 	1	int
 	=	assign_op
-	m9	label
+	m11	label
 	:	colon
 	i	r-val
 	10	int
 	<=	rel_op
-	m10	label
+	m12	label
 	JF	jf
 	i	r-val
 	i2s	conv
@@ -175,21 +179,21 @@
 	1	int
 	+	math_op
 	=	assign_op
-	m9	label
+	m11	label
 	JMP	jump
-	m10	label
+	m12	label
 	:	colon
 	""	string
 	OUT	out_op
 	j	l-val
 	5	int
 	=	assign_op
-	m11	label
+	m13	label
 	:	colon
 	j	r-val
 	1	int
 	>=	rel_op
-	m12	label
+	m14	label
 	JF	jf
 	j	r-val
 	i2s	conv
@@ -201,16 +205,16 @@
 	1	int
 	-	math_op
 	=	assign_op
-	m11	label
+	m13	label
 	JMP	jump
-	m12	label
+	m14	label
 	:	colon
 	""	string
 	OUT	out_op
 	k	l-val
 	0	int
 	=	assign_op
-	m13	label
+	m15	label
 	:	colon
 	k	l-val
 	k	r-val
@@ -220,11 +224,11 @@
 	k	r-val
 	3	int
 	<	rel_op
-	m14	label
+	m16	label
 	JF	jf
-	m13	label
+	m15	label
 	JMP	jump
-	m14	label
+	m16	label
 	:	colon
 	`fun`	CALL
 	res	l-val
@@ -241,15 +245,15 @@
 	res	r-val
 	4	int
 	>	rel_op
-	m15	label
+	m17	label
 	JF	jf
 	"Result is large"	string
-	m16	label
+	m18	label
 	JMP	jump
-	m15	label
+	m17	label
 	:	colon
 	"Result is small"	string
-	m16	label
+	m18	label
 	:	colon
 	=	assign_op
 	message	r-val

@@ -1,3 +1,5 @@
+val name: String = "Lero4ka"
+
 fun hello(name: String) {
     print("Hello, " + name)
 }
@@ -5,22 +7,24 @@ fun hello(name: String) {
 fun myFun(a: Int, b: Int): Int = a + b
 
 fun `fun`(): Int {
-    val name: String = "Lero4ka"
     hello(name)
     val a = 5 + 10
-    print(a)
+    if (a > 0) {
+        print("positive")
+    } else {
+        print("negative")
+    }
     return a + 2
 }
 
 fun main() {
     val x: Int = -8; var y: Real = 3.0
     val s: String = "Hello"
-    val name1: String = "Valeriia"
     var flag: Boolean = true
 
-    val result = s + name1
+    val result = s + name
 
-    hello(name1)
+    hello(result)
 
     if (x > 0 && flag || !false) {
         print("positive")
@@ -30,7 +34,7 @@ fun main() {
 
     when (x) {
         1 -> { print("one") }
-        2 -> print("two or three")
+        2, 3 -> print("two or three")
         4 -> print("four")
         5 -> { val age: Int = 20 }
         else -> print("other")

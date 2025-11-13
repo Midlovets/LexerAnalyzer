@@ -2,11 +2,11 @@
 .version: 0.3
 
 .vars(
-	name	string
 	a	int
 )
 
 .globVarList(
+	name
 )
 
 .funcs(
@@ -14,12 +14,11 @@
 )
 
 .labels(
+	m1	18
+	m2	22
 )
 
 .code(
-	name	l-val
-	"Lero4ka"	string
-	=	assign_op
 	name	r-val
 	hello	CALL
 	a	l-val
@@ -28,7 +27,20 @@
 	+	math_op
 	=	assign_op
 	a	r-val
+	0	int
+	>	rel_op
+	m1	label
+	JF	jf
+	"positive"	string
 	OUT	out_op
+	m2	label
+	JMP	jump
+	m1	label
+	:	colon
+	"negative"	string
+	OUT	out_op
+	m2	label
+	:	colon
 	a	r-val
 	2	int
 	+	math_op
