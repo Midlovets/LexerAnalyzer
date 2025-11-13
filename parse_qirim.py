@@ -930,22 +930,18 @@ def parse_statement_section(is_function_block=False, function_name=None):
     global numRow
     indent = next_ident()
     trace(f"{indent}parse_statement_section():")
-    while True:
-        if numRow > len_tableOfSymb:
-            if is_function_block:
-                print(f"Parser ERROR: Незакрита функція {function_name if function_name else ''}")
-                exit(1010)
-            else:
-                print("ПОМИЛКА! Очікувався: '}'.")
-                exit(1009)
-        numLine, lex, tok = get_symb()
-        if lex == "}" and tok == "brackets_op":
-            break
-        if lex == ";" and tok == "punct":
-            numRow += 1
-            continue
-        if not parse_statement(is_function_block, function_name):
-            break
+
+    if numRow > len_tableOfSymb:
+        if is_function_block:
+            print(f"Parser ERROR: Незакрита функція {function_name if function_name else ''}")
+            exit(1010)
+        else:
+            print("ПОМИЛКА! Очікувався: '}'.")
+            exit(1009)
+
+    if not parse_statement(is_function_block, function_name):
+        pass
+
     prev_ident()
     return True
 

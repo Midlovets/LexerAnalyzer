@@ -4,10 +4,14 @@ fun foo(value : Int) : String{
 }
 
 fun boo(value : Int) : Int{
+    var alpha : Int = 10
+    print(foo(alpha))
     return value + 100
 }
 
 fun main() {
-    print(foo(12))
-    print(boo(12))
+    var a : Int = 1500
+    print("Foo 1 " + foo(12))
+    print("Boo 1 " + boo(12))
+    print("Boo 2 " + boo(a))
 }

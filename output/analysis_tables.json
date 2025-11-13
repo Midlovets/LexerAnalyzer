@@ -28,7 +28,7 @@
     "main": {
       "params": [],
       "return_type": "Unit",
-      "line": 10,
+      "line": 12,
       "order": 2
     }
   },
@@ -47,8 +47,21 @@
         "initialized": true,
         "mutable": false,
         "line": 6
+      },
+      "alpha": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 7
       }
     },
-    "main": {}
+    "main": {
+      "a": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 13
+      }
+    }
   }
 }
