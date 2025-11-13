@@ -1,68 +1,181 @@
 {
   "global_vars": {},
   "functions": {
-    "main": {
-      "params": [],
+    "hello": {
+      "params": [
+        [
+          "name",
+          "String",
+          false
+        ]
+      ],
       "return_type": "Unit",
       "line": 1,
       "order": 0
+    },
+    "myFun": {
+      "params": [
+        [
+          "a",
+          "Int",
+          false
+        ],
+        [
+          "b",
+          "Int",
+          false
+        ]
+      ],
+      "return_type": "Int",
+      "line": 5,
+      "order": 1
+    },
+    "`fun`": {
+      "params": [],
+      "return_type": "Int",
+      "line": 7,
+      "order": 2
+    },
+    "main": {
+      "params": [],
+      "return_type": "Unit",
+      "line": 15,
+      "order": 3
     }
   },
   "function_vars": {
+    "hello": {
+      "name": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 1
+      }
+    },
+    "myFun": {
+      "a": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 5
+      },
+      "b": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 5
+      }
+    },
+    "`fun`": {
+      "name": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 8
+      },
+      "a": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 10
+      }
+    },
     "main": {
       "x": {
         "type": "Int",
         "initialized": true,
         "mutable": false,
-        "line": 2
+        "line": 16
       },
       "y": {
         "type": "Real",
         "initialized": true,
         "mutable": true,
-        "line": 2
+        "line": 16
       },
       "s": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 3
+        "line": 17
+      },
+      "name1": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 18
       },
       "flag": {
         "type": "Boolean",
         "initialized": true,
         "mutable": true,
-        "line": 4
-      },
-      "name": {
-        "type": "String",
-        "initialized": true,
-        "mutable": false,
-        "line": 5
+        "line": 19
       },
       "result": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 7
+        "line": 21
       },
       "i": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 24
+        "line": 39
       },
       "j": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 28
+        "line": 44
       },
       "k": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 32
+        "line": 49
+      },
+      "res": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 56
+      },
+      "message": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 59
+      },
+      "input": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 63
+      },
+      "a": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": true,
+        "line": 66
+      },
+      "exp": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 68
+      },
+      "quoted": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 71
+      },
+      "backtick": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 72
       }
     }
   }

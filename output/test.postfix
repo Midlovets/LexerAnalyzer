@@ -5,53 +5,73 @@
 	x	int
 	y	float
 	s	string
+	name1	string
 	flag	bool
-	name	string
 	result	string
 	i	int
 	j	int
 	k	int
+	res	int
+	message	string
+	input	string
+	a	float
+	exp	float
+	quoted	string
+	backtick	int
+)
+
+.globVarList(
+)
+
+.funcs(
+	`fun`	int	0
+	hello	void	1
+	myFun	int	2
 )
 
 .labels(
-	m1	37
-	m2	41
-	m3	103
-	m4	54
-	m5	67
-	m6	80
-	m7	93
-	m8	101
-	m9	108
-	m10	124
-	m11	129
-	m12	145
-	m13	150
-	m14	164
+	m1	39
+	m2	43
+	m3	106
+	m4	56
+	m5	69
+	m6	82
+	m7	96
+	m8	104
+	m9	111
+	m10	130
+	m11	137
+	m12	156
+	m13	163
+	m14	177
+	m15	199
+	m16	202
 )
 
 .code(
 	x	l-val
-	5	int
+	8	int
+	NEG	math_op
 	=	assign_op
 	y	l-val
-	3	int
-	i2f	conv
+	3.0	float
 	=	assign_op
 	s	l-val
-	"Hello, "	string
+	"Hello"	string
+	=	assign_op
+	name1	l-val
+	"Valeriia"	string
 	=	assign_op
 	flag	l-val
 	true	bool
 	=	assign_op
-	name	l-val
-	"Valeriia"	string
-	=	assign_op
 	result	l-val
-	"Hello, "	string
-	"Anfisa"	string
+	s	r-val
+	name1	r-val
 	CAT	cat_op
 	=	assign_op
+	name1	r-val
+	hello	CALL
 	x	r-val
 	0	int
 	>	rel_op
@@ -117,8 +137,9 @@
 	==	rel_op
 	m7	label
 	JF	jf
-	"five"	string
-	OUT	out_op
+	age	l-val
+	20	int
+	=	assign_op
 	POP	stack_op
 	m3	label
 	JMP	jump
@@ -145,6 +166,9 @@
 	m10	label
 	JF	jf
 	i	r-val
+	i2s	conv
+	","	string
+	CAT	cat_op
 	OUT	out_op
 	i	l-val
 	i	r-val
@@ -155,6 +179,8 @@
 	JMP	jump
 	m10	label
 	:	colon
+	""	string
+	OUT	out_op
 	j	l-val
 	5	int
 	=	assign_op
@@ -166,6 +192,9 @@
 	m12	label
 	JF	jf
 	j	r-val
+	i2s	conv
+	"; "	string
+	CAT	cat_op
 	OUT	out_op
 	j	l-val
 	j	r-val
@@ -176,6 +205,8 @@
 	JMP	jump
 	m12	label
 	:	colon
+	""	string
+	OUT	out_op
 	k	l-val
 	0	int
 	=	assign_op
@@ -195,4 +226,78 @@
 	JMP	jump
 	m14	label
 	:	colon
+	`fun`	CALL
+	res	l-val
+	2	int
+	3	int
+	myFun	CALL
+	=	assign_op
+	"myFun = "	string
+	res	r-val
+	i2s	conv
+	CAT	cat_op
+	OUT	out_op
+	message	l-val
+	res	r-val
+	4	int
+	>	rel_op
+	m15	label
+	JF	jf
+	"Result is large"	string
+	m16	label
+	JMP	jump
+	m15	label
+	:	colon
+	"Result is small"	string
+	m16	label
+	:	colon
+	=	assign_op
+	message	r-val
+	OUT	out_op
+	"Enter a number: "	string
+	OUT	out_op
+	input	l-val
+	INP	inp_op
+	=	assign_op
+	"You entered: "	string
+	input	r-val
+	CAT	cat_op
+	OUT	out_op
+	a	l-val
+	2	int
+	3	int
+	+	math_op
+	1	int
+	-	math_op
+	i2f	conv
+	=	assign_op
+	a	l-val
+	a	r-val
+	4	int
+	i2f	conv
+	*	math_op
+	2.0	float
+	/	math_op
+	=	assign_op
+	exp	l-val
+	2.0	float
+	3.0	float
+	^	pow_op
+	=	assign_op
+	"exp = "	string
+	exp	r-val
+	f2s	conv
+	CAT	cat_op
+	OUT	out_op
+	quoted	l-val
+	"quoted"	string
+	=	assign_op
+	backtick	l-val
+	`fun`	CALL
+	=	assign_op
+	"backtick = "	string
+	backtick	r-val
+	i2s	conv
+	CAT	cat_op
+	OUT	out_op
 )

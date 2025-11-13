@@ -1,0 +1,23 @@
+.target: Postfix Machine
+.version: 0.3
+
+.vars(
+	a	int
+	b	int
+)
+
+.globVarList(
+)
+
+.funcs(
+)
+
+.labels(
+)
+
+.code(
+	a	r-val
+	b	r-val
+	+	math_op
+	RET	
+)

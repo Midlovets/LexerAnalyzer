@@ -1,0 +1,36 @@
+.target: Postfix Machine
+.version: 0.3
+
+.vars(
+	name	string
+	a	int
+)
+
+.globVarList(
+)
+
+.funcs(
+	hello	void	1
+)
+
+.labels(
+)
+
+.code(
+	name	l-val
+	"Lero4ka"	string
+	=	assign_op
+	name	r-val
+	hello	CALL
+	a	l-val
+	5	int
+	10	int
+	+	math_op
+	=	assign_op
+	a	r-val
+	OUT	out_op
+	a	r-val
+	2	int
+	+	math_op
+	RET	
+)

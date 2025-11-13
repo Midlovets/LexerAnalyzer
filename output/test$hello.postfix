@@ -1,0 +1,23 @@
+.target: Postfix Machine
+.version: 0.3
+
+.vars(
+	name	string
+)
+
+.globVarList(
+)
+
+.funcs(
+)
+
+.labels(
+)
+
+.code(
+	"Hello, "	string
+	name	r-val
+	CAT	cat_op
+	OUT	out_op
+	RET	
+)
