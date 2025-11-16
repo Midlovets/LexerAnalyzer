@@ -3,6 +3,7 @@
 
 .vars(
 	a	int
+	b	float
 )
 
 .globVarList(
@@ -14,8 +15,8 @@
 )
 
 .labels(
-	m1	18
-	m2	22
+	m1	21
+	m2	25
 )
 
 .code(
@@ -31,7 +32,10 @@
 	>	rel_op
 	m1	label
 	JF	jf
-	"positive"	string
+	b	l-val
+	15.03	float
+	=	assign_op
+	b	r-val
 	OUT	out_op
 	m2	label
 	JMP	jump

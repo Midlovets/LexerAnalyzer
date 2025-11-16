@@ -1329,31 +1329,45 @@ def parse_step_expr():
 
 
 def parse_do_block(is_function_block=False, function_name=None, create_scope=True):
-    global numRow
+    global numRow, currentFunction
     indent = next_ident()
     print(f"{indent}parse_do_block():")
     vars_before = set(tableOfVar.keys()) if create_scope else None
     numLine, lex, tok = get_symb()
     if lex == "{" and tok == "brackets_op":
         numRow += 1
-        parse_statement_section(is_function_block, function_name)
-        if numRow > len_tableOfSymb:
-            fail_parse("Незакритий блок { ... }", (numLine, lex, tok))
-        numLine2, lex2, tok2 = get_symb()
-        if lex2 == "}" and tok2 == 'brackets_op':
-            parse_token("}", "brackets_op")
-        else:
-            fail_parse("Незакритий блок { ... }", (numLine2, lex2, tok2))
+        while True:
+            if numRow > len_tableOfSymb:
+                fail_parse("Незакритий блок { ... }", (numLine, lex, tok))
+
+            numLine2, lex2, tok2 = get_symb()
+            if lex2 == "}" and tok2 == 'brackets_op':
+                break
+
+            statement_result = parse_statement(is_function_block, function_name)
+            if not statement_result:
+                numLine2, lex2, tok2 = get_symb()
+                if lex2 == "}" and tok2 == 'brackets_op':
+                    break
+
+        parse_token("}", "brackets_op")
     else:
         if lex in ("val", "var") and tok == "keyword":
             print(f"Parser ERROR: Рядок {numLine}: Оголошення змінних '{lex}' не дозволене без блоку {{ ... }}")
             exit(1015)
         parse_statement(is_function_block, function_name)
+
     if create_scope and vars_before is not None:
-        vars_to_remove = [v for v in tableOfVar.keys() if v not in vars_before]
-        for var_name in vars_to_remove:
-            del tableOfVar[var_name]
-            print(f"    SEMANTIC: Видалено локальну змінну блоку: {var_name}")
+        if currentFunction:
+            if currentFunction not in tableOfVarByFunction:
+                tableOfVarByFunction[currentFunction] = {}
+
+            for var_name in tableOfVar.keys():
+                if var_name not in vars_before:
+                    if var_name not in tableOfVarByFunction[currentFunction]:
+                        tableOfVarByFunction[currentFunction][var_name] = tableOfVar[var_name].copy()
+                        print(f"    SEMANTIC: Збережено змінну блоку '{var_name}' для функції '{currentFunction}'")
+
     prev_ident()
     return True
 

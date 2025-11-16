@@ -10,7 +10,8 @@ fun `fun`(): Int {
     hello(name)
     val a = 5 + 10
     if (a > 0) {
-        print("positive")
+        val b: Real = 15.03
+        print(b)
     } else {
         print("negative")
     }
@@ -18,7 +19,7 @@ fun `fun`(): Int {
 }
 
 fun main() {
-    val x: Int = -8; var y: Real = 3.0
+    val x: Int = 5; var y: Real = 3.0
     val s: String = "Hello"
     var flag: Boolean = true
 
@@ -36,7 +37,7 @@ fun main() {
         1 -> { print("one") }
         2, 3 -> print("two or three")
         4 -> print("four")
-        5 -> { val age: Int = 20 }
+        5 -> { val age: Int = 20; print(age) }
         else -> print("other")
     }
 
@@ -63,7 +64,7 @@ fun main() {
     val message: String = if (res > 4) "Result is large" else "Result is small"
     print(message)
 
-    print("Enter a number: ")
+    print("Enter smth")
     val input: String = readLine()
     print("You entered: " + input)
 

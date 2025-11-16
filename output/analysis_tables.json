@@ -46,7 +46,7 @@
     "main": {
       "params": [],
       "return_type": "Unit",
-      "line": 20,
+      "line": 21,
       "order": 3
     }
   },
@@ -79,6 +79,12 @@
         "initialized": true,
         "mutable": false,
         "line": 11
+      },
+      "b": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 13
       }
     },
     "main": {
@@ -86,91 +92,97 @@
         "type": "Int",
         "initialized": true,
         "mutable": false,
-        "line": 21
+        "line": 22
       },
       "y": {
         "type": "Real",
         "initialized": true,
         "mutable": true,
-        "line": 21
+        "line": 22
       },
       "s": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 22
+        "line": 23
       },
       "flag": {
         "type": "Boolean",
         "initialized": true,
         "mutable": true,
-        "line": 23
+        "line": 24
       },
       "result": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 25
+        "line": 26
+      },
+      "age": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 40
       },
       "i": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 43
+        "line": 44
       },
       "j": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 48
+        "line": 49
       },
       "k": {
         "type": "Int",
         "initialized": true,
         "mutable": true,
-        "line": 53
+        "line": 54
       },
       "res": {
         "type": "Int",
         "initialized": true,
         "mutable": false,
-        "line": 60
+        "line": 61
       },
       "message": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 63
+        "line": 64
       },
       "input": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 67
+        "line": 68
       },
       "a": {
         "type": "Real",
         "initialized": true,
         "mutable": true,
-        "line": 70
+        "line": 71
       },
       "exp": {
         "type": "Real",
         "initialized": true,
         "mutable": false,
-        "line": 72
+        "line": 73
       },
       "quoted": {
         "type": "String",
         "initialized": true,
         "mutable": false,
-        "line": 75
+        "line": 76
       },
       "backtick": {
         "type": "Int",
         "initialized": true,
         "mutable": false,
-        "line": 76
+        "line": 77
       }
     }
   }

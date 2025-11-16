@@ -8,6 +8,7 @@
 	s	string
 	flag	bool
 	result	string
+	age	int
 	i	int
 	j	int
 	k	int
@@ -30,22 +31,22 @@
 )
 
 .labels(
-	m3	39
-	m4	43
-	m5	110
-	m6	56
-	m7	73
-	m8	86
-	m9	100
-	m10	108
-	m11	115
-	m12	134
-	m13	141
-	m14	160
-	m15	167
-	m16	181
-	m17	203
-	m18	206
+	m3	38
+	m4	42
+	m5	111
+	m6	55
+	m7	72
+	m8	85
+	m9	101
+	m10	109
+	m11	116
+	m12	135
+	m13	142
+	m14	161
+	m15	168
+	m16	182
+	m17	204
+	m18	207
 )
 
 .code(
@@ -53,8 +54,7 @@
 	"Lero4ka"	string
 	=	assign_op
 	x	l-val
-	8	int
-	NEG	math_op
+	5	int
 	=	assign_op
 	y	l-val
 	3.0	float
@@ -144,6 +144,8 @@
 	age	l-val
 	20	int
 	=	assign_op
+	age	r-val
+	OUT	out_op
 	POP	stack_op
 	m5	label
 	JMP	jump
@@ -258,7 +260,7 @@
 	=	assign_op
 	message	r-val
 	OUT	out_op
-	"Enter a number: "	string
+	"Enter smth"	string
 	OUT	out_op
 	input	l-val
 	INP	inp_op
