@@ -1525,22 +1525,14 @@ def parse_when_entry(when_expr_type, end_label, is_first):
     global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_when_entry():")
+    case_body_label = create_label("m")
     next_case_label = create_label("m")
-    if not is_first:
-        gen_for_PSM('dup', None, postfix_instructions)
-
-    is_else = parse_when_condition(when_expr_type, next_case_label)
+    is_else = parse_when_condition(when_expr_type, case_body_label, next_case_label)
     parse_token('->', 'punct')
-    if not is_else:
-        gen_for_PSM(next_case_label, 'label', postfix_instructions)
-        gen_for_PSM('jf', None, postfix_instructions)
-    else:
-        gen_for_PSM('pop', None, postfix_instructions)
-
+    gen_for_PSM(case_body_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+    gen_for_PSM('pop', None, postfix_instructions)
     parse_do_block()
-    if not is_else:
-        gen_for_PSM('pop', None, postfix_instructions)
-
     gen_for_PSM(end_label, 'label', postfix_instructions)
     gen_for_PSM('jmp', None, postfix_instructions)
     gen_for_PSM(next_case_label, 'label', postfix_instructions)
@@ -1549,7 +1541,7 @@ def parse_when_entry(when_expr_type, end_label, is_first):
     return True
 
 
-def parse_when_condition(when_expr_type, next_case_label):
+def parse_when_condition(when_expr_type, case_body_label, next_case_label):
     global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_when_condition():")
@@ -1563,19 +1555,40 @@ def parse_when_condition(when_expr_type, next_case_label):
     if cond_type != when_expr_type:
         print(f"    WARNING: Тип умови when ({cond_type}) не співпадає з типом виразу ({when_expr_type})")
     gen_for_PSM('==', None, postfix_instructions)
+
+    skip_label = create_label("m")
+    gen_for_PSM(skip_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
+    gen_for_PSM(case_body_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    gen_for_PSM(skip_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     while True:
         _, lex, tok = get_symb()
         if lex == "," and tok == "punct":
             numRow += 1
-            gen_for_PSM('swap', None, postfix_instructions)
+            gen_for_PSM('dup', None, postfix_instructions)
             cond_type = parse_expression()
             if cond_type != when_expr_type:
                 print(f"    WARNING: Тип умови when ({cond_type}) не співпадає з типом виразу ({when_expr_type})")
             gen_for_PSM('==', None, postfix_instructions)
-            gen_for_PSM('||', None, postfix_instructions)
+            skip_label = create_label("m")
+            gen_for_PSM(skip_label, 'label', postfix_instructions)
+            gen_for_PSM('jf', None, postfix_instructions)
+
+            gen_for_PSM(case_body_label, 'label', postfix_instructions)
+            gen_for_PSM('jmp', None, postfix_instructions)
+
+            gen_for_PSM(skip_label, 'label', postfix_instructions)
+            gen_for_PSM(':', 'colon', postfix_instructions)
         else:
             break
 
+    gen_for_PSM(next_case_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
     prev_ident()
     return False
 
@@ -1789,26 +1802,24 @@ def parse_power_expr():
     global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_power_expr():")
+
     left_type = parse_unary_expr()
 
-    while True:
-        numLine, lex, tok = get_symb()
-        if tok == "exp_op":
-            operator = lex
-            numRow += 1
-            print(f"{indent}Оператор піднесення до степеня: {lex}")
-            right_type = parse_unary_expr()
+    numLine, lex, tok = get_symb()
+    if tok == "exp_op":
+        operator = lex
+        numRow += 1
+        print(f"{ident}Оператор піднесення до степеня: {lex}")
 
-            left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
+        right_type = parse_power_expr()
+        left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
 
-            result_type = get_type_op(left_type, operator, right_type)
-            if result_type == 'type_error':
-                fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
+        result_type = get_type_op(left_type, operator, right_type)
+        if result_type == 'type_error':
+            fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
 
-            gen_for_PSM(operator, None, postfix_instructions)
-            left_type = result_type
-        else:
-            break
+        gen_for_PSM(operator, None, postfix_instructions)
+        left_type = result_type
 
     prev_ident()
     return left_type
