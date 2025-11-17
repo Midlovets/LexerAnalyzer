@@ -4,6 +4,7 @@ import os
 import re
 import traceback
 import lex_qirim
+from LexerAnalyzer.lex_qirim import numLine
 from gen_instruction_code import gen_for_PSM
 
 lex_qirim.lex()
@@ -1169,9 +1170,16 @@ def parse_output_statement():
 
 
 def parse_function_call_statement():
+    global postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_function_call_statement():")
+    numLine, func_name, _ = get_symb()
     parse_function_call()
+    if func_name in tableOfFunc:
+        return_type = tableOfFunc[func_name]['return_type']
+        if return_type != 'Unit':
+            gen_for_PSM('pop', None, postfix_instructions)
+            print(f"    SEMANTIC: Відкинуто повернене значення функції '{func_name}' (тип: {return_type})")
     prev_ident()
     return True
 
