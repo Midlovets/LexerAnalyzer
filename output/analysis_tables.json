@@ -1,66 +1,182 @@
 {
-  "global_vars": {},
+  "global_vars": {
+    "name": {
+      "type": "String",
+      "initialized": true,
+      "mutable": false,
+      "line": 1
+    }
+  },
   "functions": {
-    "foo": {
+    "hello": {
       "params": [
         [
-          "value",
-          "Int",
+          "name",
+          "String",
           false
         ]
       ],
-      "return_type": "String",
-      "line": 1,
+      "return_type": "Unit",
+      "line": 3,
       "order": 0
     },
-    "boo": {
+    "myFun": {
       "params": [
         [
-          "value",
+          "a",
+          "Int",
+          false
+        ],
+        [
+          "b",
           "Int",
           false
         ]
       ],
       "return_type": "Int",
-      "line": 6,
+      "line": 7,
       "order": 1
+    },
+    "`fun`": {
+      "params": [],
+      "return_type": "Int",
+      "line": 9,
+      "order": 2
     },
     "main": {
       "params": [],
       "return_type": "Unit",
-      "line": 12,
-      "order": 2
+      "line": 21,
+      "order": 3
     }
   },
   "function_vars": {
-    "foo": {
-      "value": {
-        "type": "Int",
+    "hello": {
+      "name": {
+        "type": "String",
         "initialized": true,
         "mutable": false,
         "line": 1
       }
     },
-    "boo": {
-      "value": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": false,
-        "line": 6
-      },
-      "alpha": {
-        "type": "Int",
-        "initialized": true,
-        "mutable": true,
-        "line": 7
-      }
-    },
-    "main": {
+    "myFun": {
       "a": {
         "type": "Int",
         "initialized": true,
-        "mutable": true,
+        "mutable": false,
+        "line": 7
+      },
+      "b": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 7
+      }
+    },
+    "`fun`": {
+      "a": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 11
+      },
+      "b": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
         "line": 13
+      }
+    },
+    "main": {
+      "x": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 22
+      },
+      "y": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": true,
+        "line": 22
+      },
+      "s": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 23
+      },
+      "flag": {
+        "type": "Boolean",
+        "initialized": true,
+        "mutable": true,
+        "line": 24
+      },
+      "result": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 26
+      },
+      "age": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 40
+      },
+      "i": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 44
+      },
+      "j": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 49
+      },
+      "k": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": true,
+        "line": 54
+      },
+      "res": {
+        "type": "Int",
+        "initialized": true,
+        "mutable": false,
+        "line": 62
+      },
+      "message": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 65
+      },
+      "input": {
+        "type": "String",
+        "initialized": true,
+        "mutable": false,
+        "line": 69
+      },
+      "a": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": true,
+        "line": 72
+      },
+      "exp": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 74
+      },
+      "backtick": {
+        "type": "Real",
+        "initialized": true,
+        "mutable": false,
+        "line": 77
       }
     }
   }

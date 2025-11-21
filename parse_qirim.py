@@ -27,16 +27,22 @@ tableOfFunc = {}
 tableOfVarByFunction = {}
 loop_variables = {}
 
+true_global_vars = set()
+
 currentFunction = None
 TRACE = False
-OUTPUT_DIR = "output"  # Директорія для запису таблиць у файл
+OUTPUT_DIR = "output"
 
-# Глобальний список для зберігання інструкцій постфіксного коду
 postfix_instructions = []
 
+function_calls = {}
 
-# Запис POSTIX-файлу
+global_vars_usage = {}
+global_init_instructions = []
+
+
 def generate_postfix_file(input_file_name, func_name):
+    global global_init_instructions
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
@@ -48,9 +54,19 @@ def generate_postfix_file(input_file_name, func_name):
 
     header = ".target: Postfix Machine\n.version: 0.3\n\n"
 
-    # Секція змінних
     vars_section = ".vars(\n"
-    vars_to_write = tableOfVarByFunction.get(func_name, {})
+
+    if func_name == 'main':
+        vars_to_write = {}
+        for var_name, var_info in tableOfVar.items():
+            vars_to_write[var_name] = var_info
+
+        if func_name in tableOfVarByFunction:
+            for var_name, var_info in tableOfVarByFunction[func_name].items():
+                vars_to_write[var_name] = var_info
+
+    else:
+        vars_to_write = tableOfVarByFunction.get(func_name, {})
 
     if vars_to_write:
         for var_name, var_info in vars_to_write.items():
@@ -66,16 +82,21 @@ def generate_postfix_file(input_file_name, func_name):
             vars_section += f"\t{var_name}\t{psm_type}\n"
     vars_section += ")\n\n"
 
-    glob_vars_section = ".globVarList(\n\t\n)\n\n"
+    glob_vars_section = ".globVarList(\n"
+    if func_name != "main" and func_name in global_vars_usage:
+        used_globals = global_vars_usage[func_name]
+        for var_name in sorted(used_globals):
+            glob_vars_section += f"\t{var_name}\n"
+    glob_vars_section += ")\n\n"
+
     funcs_section = ".funcs(\n"
 
-    # Ми заповнюємо .funcs списком УСІХ ІНШИХ функцій,
-    # щоб цей модуль знав, які функції він може викликати.
-    if tableOfFunc:  # tableOfFunc - це глобальна таблиця
-        for f_name, f_info in tableOfFunc.items():
-            # Функція не повинна оголошувати саму себе у своєму .funcs
-            if f_name == func_name:
-                continue
+    called_functions = function_calls.get(func_name, set())
+
+    if called_functions and tableOfFunc:
+        for f_name in sorted(called_functions):
+            if f_name in tableOfFunc:
+                f_info = tableOfFunc[f_name]
 
             # Отримуємо тип повернення для PSM
             return_type = f_info['return_type'].lower()
@@ -90,11 +111,9 @@ def generate_postfix_file(input_file_name, func_name):
             elif return_type == "unit":
                 psm_type = "void"
             else:
-                psm_type = "void"  # За замовчуванням
+                psm_type = "void"
 
-            # Отримуємо кількість параметрів
-            num_params = len(f_info['params'])  # f_info['params'] - це список
-
+            num_params = len(f_info['params'])
             funcs_section += f"\t{f_name}\t{psm_type}\t{num_params}\n"
 
     funcs_section += ")\n\n"
@@ -102,17 +121,22 @@ def generate_postfix_file(input_file_name, func_name):
     # Секція міток
     labels_section = ".labels(\n"
     label_positions = {}
+    code_offset = 0
+
+    if func_name == "main" and global_init_instructions:
+        code_offset = len(global_init_instructions)
+
     for idx, (instr, opt) in enumerate(postfix_instructions):
         if opt == 'label' and instr not in label_positions:
             colon_idx = idx + 1
             if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
-                label_positions[instr] = colon_idx + 1
+                label_positions[instr] = colon_idx + 1 + code_offset
             else:
                 continue
         elif opt == 'label' and instr in label_positions:
             colon_idx = idx + 1
             if colon_idx < len(postfix_instructions) and postfix_instructions[colon_idx][1] == 'colon':
-                label_positions[instr] = colon_idx + 1
+                label_positions[instr] = colon_idx + 1 + code_offset
 
     def get_label_number(label_name):
         match = re.search(r'\d+', label_name)
@@ -125,6 +149,10 @@ def generate_postfix_file(input_file_name, func_name):
 
     # Секція коду
     code_section = ".code(\n"
+    if func_name == "main" and global_init_instructions:
+        for instr, opt in global_init_instructions:
+            code_section += f"\t{instr}\t{opt}\n"
+
     for instr, opt in postfix_instructions:
         code_section += f"\t{instr}\t{opt}\n"
     code_section += ")"
@@ -134,6 +162,32 @@ def generate_postfix_file(input_file_name, func_name):
 
     print(f"\nINFO: Постфіксний код збережено у файл: {output_file}")
     return output_file
+
+
+def track_global_var_usage(var_name):
+    global currentFunction, tableOfVar, tableOfFunc, global_vars_usage
+    if not currentFunction or currentFunction == "main":
+        return
+
+    if currentFunction in tableOfFunc:
+        for param_name, _, _ in tableOfFunc[currentFunction]['params']:
+            if param_name == var_name:
+                return
+
+    if var_name not in tableOfVar:
+        return
+
+    var_line = tableOfVar[var_name]['line']
+    func_line = tableOfFunc[currentFunction]['line']
+
+    if var_line > func_line:
+        return
+
+    if currentFunction not in global_vars_usage:
+        global_vars_usage[currentFunction] = set()
+
+    global_vars_usage[currentFunction].add(var_name)
+    print(f"    SEMANTIC: Функція '{currentFunction}' використовує глобальну змінну '{var_name}'")
 
 
 def save_tables_to_file():
@@ -422,22 +476,16 @@ def get_type_op(left_type, op, right_type):
     if op in ('+', '-', '*', '/', '%', '**'):
 
         if op == '+':
-            # String + String
             if left_type == 'String' and right_type == 'String':
                 return 'String'
-            # String + Int → String
             if left_type == 'String' and right_type == 'Int':
                 return 'String'
-            # String + Real → String
             if left_type == 'String' and right_type == 'Real':
                 return 'String'
-            # Int + String → String
             if left_type == 'Int' and right_type == 'String':
                 return 'String'
-            # Real + String → String
             if left_type == 'Real' and right_type == 'String':
                 return 'String'
-
         if left_type in ('Int', 'Real') and right_type in ('Int', 'Real'):
             if left_type == 'Int' and right_type == 'Int':
                 return 'Int'
@@ -455,31 +503,26 @@ def get_type_op(left_type, op, right_type):
         if left_type == 'Boolean' and right_type == 'Boolean':
             return 'Boolean'
         return 'type_error'
-    
     return 'type_error'
 
-def auto_convert_types(left_type, right_type, postfix_instructions, operator='+'):
 
+def auto_convert_types(left_type, right_type, postfix_instructions, operator='+'):
     if operator == '+':
-        # String + Int → конвертуємо Int в String
         if left_type == 'String' and right_type == 'Int':
             postfix_instructions.append(('i2s', 'conv'))
             return left_type, 'String'
-        
-        # String + Real → конвертуємо Real в String
+
         if left_type == 'String' and right_type == 'Real':
             postfix_instructions.append(('f2s', 'conv'))
             return left_type, 'String'
-        
-        # Int + String → конвертуємо Int в String
+
         if left_type == 'Int' and right_type == 'String':
             if len(postfix_instructions) >= 1:
                 right_operand = postfix_instructions.pop()
                 postfix_instructions.append(('i2s', 'conv'))
                 postfix_instructions.append(right_operand)
             return 'String', right_type
-        
-        # Real + String → конвертуємо Real в String
+
         if left_type == 'Real' and right_type == 'String':
             if len(postfix_instructions) >= 1:
                 right_operand = postfix_instructions.pop()
@@ -493,13 +536,12 @@ def auto_convert_types(left_type, right_type, postfix_instructions, operator='+'
             postfix_instructions.append(('i2f', 'conv'))
             postfix_instructions.append(right_operand)
         return 'Real', right_type
-    
+
     elif left_type == 'Real' and right_type == 'Int':
         postfix_instructions.append(('i2f', 'conv'))
         return left_type, 'Real'
-    
-    return left_type, right_type
 
+    return left_type, right_type
 
 
 def parse_token(lexeme, token):
@@ -526,6 +568,9 @@ def parse_token(lexeme, token):
 
 
 def parse_program():
+    global global_vars_usage, true_global_vars
+    global_vars_usage = {}
+    true_global_vars = set()
     try:
         indent = next_ident()
         print(f"{indent}parse_program():")
@@ -545,6 +590,9 @@ def parse_program():
                 parse_variable_declarations()
             else:
                 break
+
+        true_global_vars = set(tableOfVar.keys())
+
         if not found_main:
             print("\nАВАРІЙНЕ ЗАВЕРШЕННЯ ПРОГРАМИ! У даній програмі немає точки входу fun main() {...}.")
             exit(2001)
@@ -576,6 +624,7 @@ def parse_main_function():
     global numRow, currentFunction, postfix_instructions, loop_variables
     postfix_instructions = []  # Очищаємо список інструкцій перед початком парсингу
     loop_variables['main'] = {}
+    function_calls['main'] = set()
     indent = next_ident()
     print(f"{indent}parse_main_function():")
     currentFunction = 'main'
@@ -604,15 +653,12 @@ def parse_main_function():
     currentFunction = None
     print("\nГенерація ПОЛІЗ-коду для main")
     generate_postfix_file("test.qirim", "main")
-
     prev_ident()
     return True
 
 
 def parse_function_declaration():
-    global numRow, currentFunction, loop_variables
-
-    global postfix_instructions
+    global numRow, currentFunction, loop_variables, postfix_instructions
     postfix_instructions = []
 
     indent = next_ident()
@@ -625,6 +671,7 @@ def parse_function_declaration():
         func_line = numLine
         currentFunction = function_name
         loop_variables[function_name] = {}
+        function_calls[function_name] = set()
         numRow += 1
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, "identifier", "identifier"))
@@ -652,14 +699,22 @@ def parse_function_declaration():
         if return_type != 'Unit' and expr_type != return_type:
             if not (return_type == 'Real' and expr_type == 'Int'):
                 fail_semantic("невідповідність типу return", (numLine, function_name, return_type, expr_type))
+        gen_for_PSM('return', None, postfix_instructions)
+
     elif lex == "{" and tok == "brackets_op":
         parse_block(is_function_block=True, function_name=function_name)
+        if not postfix_instructions or postfix_instructions[-1][0] != 'RET':
+            gen_for_PSM('return', None, postfix_instructions)
     else:
         fail_parse("несумісність токенів", (numLine, lex, tok, "= або {", "(assign_op або brackets_op)"))
 
     func_local_vars = {}
+    for param_name, param_type, has_default in params:
+        if param_name in tableOfVar:
+            func_local_vars[param_name] = tableOfVar[param_name].copy()
+
     for var_name in tableOfVar.keys():
-        if var_name not in vars_before_function:
+        if var_name not in vars_before_function and var_name not in func_local_vars:
             func_local_vars[var_name] = tableOfVar[var_name].copy()
 
     for var_name, var_info in loop_variables[function_name].items():
@@ -878,7 +933,7 @@ def parse_variable_declaration():
 
 
 def parse_declaration(is_mutable):
-    global numRow, postfix_instructions
+    global numRow, postfix_instructions, global_init_instructions
     indent = next_ident()
     print(f"{indent}parse_declaration():")
     numLine, lex, tok = get_symb()
@@ -902,10 +957,16 @@ def parse_declaration(is_mutable):
     if lex == "=" and tok == "assign_op":
         numRow += 1
 
+        is_global = (currentFunction is None)
+        original_postfix_instructions = None
+
+        if is_global:
+            original_postfix_instructions = postfix_instructions
+            postfix_instructions = global_init_instructions
+
         gen_for_PSM(var_name, 'l-val', postfix_instructions)
 
         expr_type = parse_expression()
-
 
         if var_type is None:
             var_type = expr_type
@@ -915,16 +976,19 @@ def parse_declaration(is_mutable):
             else:
                 fail_semantic("несумісність типів у присвоєнні", (numLine, var_name, var_type, expr_type))
 
-
         gen_for_PSM('=', 'assign_op', postfix_instructions)
         is_initialized = True
-    elif var_type is None:
 
+        if is_global:
+            postfix_instructions = original_postfix_instructions
+
+    elif var_type is None:
         fail_parse("несумісність токенів", (numLine, lex, tok, "var/val, : або =", 'punct або assign_op'))
 
     add_var_to_table(var_name, var_type, is_mutable, is_initialized, numLine)
     prev_ident()
     return True
+
 
 def parse_statement_section(is_function_block=False, function_name=None):
     global numRow
@@ -1028,6 +1092,7 @@ def parse_assignment_statement():
     if not is_var_mutable(var_name):
         fail_semantic("присвоєння val змінній", (numLine, var_name))
 
+    track_global_var_usage(var_name)
     var_type = get_type_var(var_name)
 
     parse_token("=", "assign_op")
@@ -1089,21 +1154,28 @@ def parse_output_statement():
     parse_token("print", "keyword")
     parse_token("(", "brackets_op")
     numLine, lex, tok = get_symb()
-    
+
     if lex != ")" or tok != "brackets_op":
-      
         parse_expression()
-    
+
         gen_for_PSM('print', None, postfix_instructions)
-    
+
     parse_token(")", "brackets_op")
     prev_ident()
     return True
 
+
 def parse_function_call_statement():
+    global postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_function_call_statement():")
+    numLine, func_name, _ = get_symb()
     parse_function_call()
+    if func_name in tableOfFunc:
+        return_type = tableOfFunc[func_name]['return_type']
+        if return_type != 'Unit':
+            gen_for_PSM('pop', None, postfix_instructions)
+            print(f"    SEMANTIC: Відкинуто повернене значення функції '{func_name}' (тип: {return_type})")
     prev_ident()
     return True
 
@@ -1261,31 +1333,45 @@ def parse_step_expr():
 
 
 def parse_do_block(is_function_block=False, function_name=None, create_scope=True):
-    global numRow
+    global numRow, currentFunction
     indent = next_ident()
     print(f"{indent}parse_do_block():")
     vars_before = set(tableOfVar.keys()) if create_scope else None
     numLine, lex, tok = get_symb()
     if lex == "{" and tok == "brackets_op":
         numRow += 1
-        parse_statement_section(is_function_block, function_name)
-        if numRow > len_tableOfSymb:
-            fail_parse("Незакритий блок { ... }", (numLine, lex, tok))
-        numLine2, lex2, tok2 = get_symb()
-        if lex2 == "}" and tok2 == 'brackets_op':
-            parse_token("}", "brackets_op")
-        else:
-            fail_parse("Незакритий блок { ... }", (numLine2, lex2, tok2))
+        while True:
+            if numRow > len_tableOfSymb:
+                fail_parse("Незакритий блок { ... }", (numLine, lex, tok))
+
+            numLine2, lex2, tok2 = get_symb()
+            if lex2 == "}" and tok2 == 'brackets_op':
+                break
+
+            statement_result = parse_statement(is_function_block, function_name)
+            if not statement_result:
+                numLine2, lex2, tok2 = get_symb()
+                if lex2 == "}" and tok2 == 'brackets_op':
+                    break
+
+        parse_token("}", "brackets_op")
     else:
         if lex in ("val", "var") and tok == "keyword":
             print(f"Parser ERROR: Рядок {numLine}: Оголошення змінних '{lex}' не дозволене без блоку {{ ... }}")
             exit(1015)
         parse_statement(is_function_block, function_name)
+
     if create_scope and vars_before is not None:
-        vars_to_remove = [v for v in tableOfVar.keys() if v not in vars_before]
-        for var_name in vars_to_remove:
-            del tableOfVar[var_name]
-            print(f"    SEMANTIC: Видалено локальну змінну блоку: {var_name}")
+        if currentFunction:
+            if currentFunction not in tableOfVarByFunction:
+                tableOfVarByFunction[currentFunction] = {}
+
+            for var_name in tableOfVar.keys():
+                if var_name not in vars_before:
+                    if var_name not in tableOfVarByFunction[currentFunction]:
+                        tableOfVarByFunction[currentFunction][var_name] = tableOfVar[var_name].copy()
+                        print(f"    SEMANTIC: Збережено змінну блоку '{var_name}' для функції '{currentFunction}'")
+
     prev_ident()
     return True
 
@@ -1435,22 +1521,14 @@ def parse_when_entry(when_expr_type, end_label, is_first):
     global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_when_entry():")
+    case_body_label = create_label("m")
     next_case_label = create_label("m")
-    if not is_first:
-        gen_for_PSM('dup', None, postfix_instructions)
-
-    is_else = parse_when_condition(when_expr_type, next_case_label)
+    is_else = parse_when_condition(when_expr_type, case_body_label, next_case_label)
     parse_token('->', 'punct')
-    if not is_else:
-        gen_for_PSM(next_case_label, 'label', postfix_instructions)
-        gen_for_PSM('jf', None, postfix_instructions)
-    else:
-        gen_for_PSM('pop', None, postfix_instructions)
-
+    gen_for_PSM(case_body_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+    gen_for_PSM('pop', None, postfix_instructions)
     parse_do_block()
-    if not is_else:
-        gen_for_PSM('pop', None, postfix_instructions)
-
     gen_for_PSM(end_label, 'label', postfix_instructions)
     gen_for_PSM('jmp', None, postfix_instructions)
     gen_for_PSM(next_case_label, 'label', postfix_instructions)
@@ -1459,7 +1537,7 @@ def parse_when_entry(when_expr_type, end_label, is_first):
     return True
 
 
-def parse_when_condition(when_expr_type, next_case_label):
+def parse_when_condition(when_expr_type, case_body_label, next_case_label):
     global numRow, postfix_instructions
     indent = next_ident()
     print(f"{indent}parse_when_condition():")
@@ -1473,19 +1551,40 @@ def parse_when_condition(when_expr_type, next_case_label):
     if cond_type != when_expr_type:
         print(f"    WARNING: Тип умови when ({cond_type}) не співпадає з типом виразу ({when_expr_type})")
     gen_for_PSM('==', None, postfix_instructions)
+
+    skip_label = create_label("m")
+    gen_for_PSM(skip_label, 'label', postfix_instructions)
+    gen_for_PSM('jf', None, postfix_instructions)
+
+    gen_for_PSM(case_body_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
+
+    gen_for_PSM(skip_label, 'label', postfix_instructions)
+    gen_for_PSM(':', 'colon', postfix_instructions)
+
     while True:
         _, lex, tok = get_symb()
         if lex == "," and tok == "punct":
             numRow += 1
-            gen_for_PSM('swap', None, postfix_instructions)
+            gen_for_PSM('dup', None, postfix_instructions)
             cond_type = parse_expression()
             if cond_type != when_expr_type:
                 print(f"    WARNING: Тип умови when ({cond_type}) не співпадає з типом виразу ({when_expr_type})")
             gen_for_PSM('==', None, postfix_instructions)
-            gen_for_PSM('||', None, postfix_instructions)
+            skip_label = create_label("m")
+            gen_for_PSM(skip_label, 'label', postfix_instructions)
+            gen_for_PSM('jf', None, postfix_instructions)
+
+            gen_for_PSM(case_body_label, 'label', postfix_instructions)
+            gen_for_PSM('jmp', None, postfix_instructions)
+
+            gen_for_PSM(skip_label, 'label', postfix_instructions)
+            gen_for_PSM(':', 'colon', postfix_instructions)
         else:
             break
 
+    gen_for_PSM(next_case_label, 'label', postfix_instructions)
+    gen_for_PSM('jmp', None, postfix_instructions)
     prev_ident()
     return False
 
@@ -1570,7 +1669,7 @@ def parse_equality_expr():
     indent = next_ident()
     trace(f"{indent}parse_equality_expr():")
     left_type = parse_relational_expr()
-    
+
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("==", "!=") and tok == "rel_op":
@@ -1578,18 +1677,18 @@ def parse_equality_expr():
             numRow += 1
             print(f"{indent}Оператор порівняння: {lex}")
             right_type = parse_relational_expr()
-            
+
             left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
-            
+
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
-            
+
             gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
-    
+
     prev_ident()
     return left_type
 
@@ -1599,7 +1698,7 @@ def parse_relational_expr():
     indent = next_ident()
     trace(f"{indent}parse_relational_expr():")
     left_type = parse_add_expr()
-    
+
     while True:
         numLine, lex, tok = get_symb()
         if lex in ("<", "<=", ">", ">=") and tok == "rel_op":
@@ -1607,27 +1706,28 @@ def parse_relational_expr():
             numRow += 1
             print(f"{indent}Оператор відношення: {lex}")
             right_type = parse_add_expr()
-            
+
             left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
-            
+
             result_type = get_type_op(left_type, lex, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, lex, left_type, right_type))
-            
+
             gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
-    
+
     prev_ident()
     return left_type
+
 
 def parse_add_expr():
     global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_add_expr():")
     left_type = parse_mult_expr()
-    
+
     while True:
         numLine, lex, tok = get_symb()
         if tok == "add_op":
@@ -1635,31 +1735,32 @@ def parse_add_expr():
             numRow += 1
             print(f"{indent}Арифметичний оператор: {lex}")
             right_type = parse_mult_expr()
-            
+
             left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions, operator)
-            
+
             result_type = get_type_op(left_type, operator, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
-            
+
             if result_type == 'String':
-                postfix_instructions.append(('CAT', 'cat_op'))  
+                postfix_instructions.append(('CAT', 'cat_op'))
             else:
                 gen_for_PSM(operator, None, postfix_instructions)
-            
+
             left_type = result_type
         else:
             break
-    
+
     prev_ident()
     return left_type
+
 
 def parse_mult_expr():
     global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_mult_expr():")
     left_type = parse_power_expr()
-    
+
     while True:
         numLine, lex, tok = get_symb()
         if tok == "mult_op":
@@ -1683,42 +1784,42 @@ def parse_mult_expr():
             result_type = get_type_op(left_type, operator, right_type)
             if result_type == 'type_error':
                 fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
-            
+
             gen_for_PSM(operator, None, postfix_instructions)
             left_type = result_type
         else:
             break
-    
+
     prev_ident()
     return left_type
+
 
 def parse_power_expr():
     global numRow, postfix_instructions
     indent = next_ident()
     trace(f"{indent}parse_power_expr():")
+
     left_type = parse_unary_expr()
-    
-    while True:
-        numLine, lex, tok = get_symb()
-        if tok == "exp_op":
-            operator = lex
-            numRow += 1
-            print(f"{indent}Оператор піднесення до степеня: {lex}")
-            right_type = parse_unary_expr()
-            
-            left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
-            
-            result_type = get_type_op(left_type, operator, right_type)
-            if result_type == 'type_error':
-                fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
-            
-            gen_for_PSM(operator, None, postfix_instructions)
-            left_type = result_type
-        else:
-            break
-    
+
+    numLine, lex, tok = get_symb()
+    if tok == "exp_op":
+        operator = lex
+        numRow += 1
+        print(f"{ident}Оператор піднесення до степеня: {lex}")
+
+        right_type = parse_power_expr()
+        left_type, right_type = auto_convert_types(left_type, right_type, postfix_instructions)
+
+        result_type = get_type_op(left_type, operator, right_type)
+        if result_type == 'type_error':
+            fail_semantic("несумісність типів операндів", (numLine, operator, left_type, right_type))
+
+        gen_for_PSM(operator, None, postfix_instructions)
+        left_type = result_type
+
     prev_ident()
     return left_type
+
 
 def parse_unary_expr():
     global numRow, postfix_instructions
@@ -1743,7 +1844,7 @@ def parse_unary_expr():
         elif unary_op == '!':
             if expr_type != 'Boolean':
                 print(f"    WARNING: Унарний ! застосовано до типу {expr_type}")
-                
+
             gen_for_PSM('!', None, postfix_instructions)
 
     prev_ident()
@@ -1825,6 +1926,9 @@ def parse_primary_expr():
                 if identifier not in tableOfFunc:
                     fail_semantic("використання неоголошеної функції", (numLine, identifier))
 
+                if currentFunction:
+                    function_calls[currentFunction].add(identifier)
+
                 func_info = tableOfFunc[identifier]
                 arg_types = parse_arguments()
                 gen_for_PSM(identifier, 'call', postfix_instructions)
@@ -1848,12 +1952,13 @@ def parse_primary_expr():
                 prev_ident()
                 return func_info['return_type']
         else:
-
             if identifier not in tableOfVar:
                 fail_semantic("використання неоголошеної змінної", (numLine, identifier))
 
             if not is_var_initialized(identifier):
                 fail_semantic("використання неініціалізованої змінної", (numLine, identifier))
+
+            track_global_var_usage(identifier)
 
             gen_for_PSM(identifier, 'r-val', postfix_instructions)
             prev_ident()
@@ -1886,6 +1991,9 @@ def parse_function_call():
     # Семантична перевірка
     if func_name not in tableOfFunc:
         fail_semantic("використання неоголошеної функції", (numLine, func_name))
+
+    if currentFunction:
+        function_calls[currentFunction].add(func_name)
 
     parse_token("(", "brackets_op")
     arg_types = parse_arguments()

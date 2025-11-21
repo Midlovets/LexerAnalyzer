@@ -24,7 +24,7 @@ tableOfVarByFunction = {}
 
 currentFunction = None
 TRACE = False
-OUTPUT_DIR = "./output"  # Директорія для запису таблиць у файл
+OUTPUT_DIR = "output"  # Директорія для запису таблиць у файл
 
 
 def save_tables_to_file():
@@ -353,6 +353,7 @@ def parse_program():
         indent = next_ident()
         print(f"{indent}parse_program():")
         found_main = False
+        main_position = None
         while numRow <= len_tableOfSymb:
             numLine, lex, tok = get_symb()
             if lex == "fun" and tok == "keyword":
@@ -360,8 +361,11 @@ def parse_program():
                     _, next_lex, next_tok, _ = tableOfSymb[numRow + 1]
                     if next_lex == "main" and next_tok == "keyword":
                         found_main = True
+                        main_position = numRow
                         break
                 parse_function_declaration()
+            elif lex in ("val", "var") and tok == "keyword":
+                parse_variable_declarations()
             else:
                 break
         if not found_main:
@@ -372,6 +376,8 @@ def parse_program():
             numLine, lex, tok = get_symb()
             if lex == "fun" and tok == "keyword":
                 parse_function_declaration()
+            elif lex in ("val", "var") and tok == "keyword":
+                parse_variable_declarations()
             else:
                 break
         if numRow == len_tableOfSymb + 1:

@@ -1,27 +1,89 @@
-fun foo(a: Int) : Int {
-    var b = 1 + a
-    return b
-}
-fun fao(a: String) {
-    print(a)
+fun hello(name: String) {
+    print("Hello, $name")
 }
 
-fun bao(alpha : Int, betta : Int): Int = alpha + betta
+fun myFun(a: Int, b: Int): Int = a + b
+
+fun `fun`(): Int {
+    return 0
+}
 
 fun main() {
-    // first
-    val a = 1
-    var b = foo(a)
-    print(fao("abc"))
-    // second
-    val str = "bebebe"
-	print(fao(str))
+    val x: Int = 5; var y: Real = 3.14
+    val s: String = "Hello"
+    var flag: Boolean = true
+    val name: String = "Valeriia"
 
-    // third
-    var alpha = 10
-    var betta = 5
+    hello(name)
 
-    print(bao(alpha, betta))
+    if (x > 0 && flag || !false) {
+        print("positive")
+    } else {
+        print("negative")
+    }
 
-    b = 3
+    when (x) {
+        1 -> print("one")
+        2, 3 -> print("two or three")
+        4 -> print("four")
+        5 -> print("five")
+        else -> print("other")
+    }
+
+    for (i in 1..10) {
+        print(i)
+        print(",")
+    }
+    print("\n")
+
+    for (j in 5 downTo 1 step 1) {
+        print(j)
+        print(";")
+    }
+    print("\n")
+
+    var k: Int = 0
+    do {
+        k = k + 1
+    } while (k < 3)
+
+    val res: Int = myFun(2, 3)
+    print("myFun = ")
+    print(res)
+    print("\n")
+
+    val message: String = if (res > 4) "Result is large" else "Result is small"
+    print(message)
+    print("\n")
+
+    print("Enter a number: ")
+    val input: String = readLine()
+    print("You entered: ")
+    print(input)
+    print("\n")
+
+    var a: Int = 2 + 3 - 1
+    a = a * 4 / 2 % 3
+    val exp: Int = 2 ** 3
+    print("exp = ")
+    print(exp)
+    print("\n")
+
+    if (a == 1 || a != 2 || a < 3 || a > 0 || a <= 5 || a >= -1) {
+        print("rel_ops work")
+    }
+    print("\n")
+
+    val quoted: String = "quoted"
+    val backtick: Int = `fun`()
+    print("backtick = ")
+    print(backtick)
+    print("\n")
+
+    val safe: String = "some"
+    print("safe = ")
+    print(safe)
+    print("\n")
+
+    print("All tokens tested!")
 }

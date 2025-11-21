@@ -1,17 +1,79 @@
-fun foo(value : Int) : String{
+val name: String = "Potato"
 
-    return "My name " + value
+fun hello(name: String) {
+    print("Hello, " + name)
 }
 
-fun boo(value : Int) : Int{
-    var alpha : Int = 10
-    print(foo(alpha))
-    return value + 100
+fun myFun(a: Int, b: Int): Int = a + b
+
+fun `fun`(): Int {
+    hello(name)
+    val a = 5 + 10
+    if (a > 0) {
+        val b: Real = 15.03
+        print(b)
+    } else {
+        print("negative")
+    }
+    return a + 2
 }
 
 fun main() {
-    var a : Int = 1500
-    print("Foo 1 " + foo(12))
-    print("Boo 1 " + boo(12))
-    print("Boo 2 " + boo(a))
+    val x: Int = 10; var y: Real = 3.0
+    val s: String = "Hello"
+    var flag: Boolean = true
+
+    val result = s + name
+
+    hello(result)
+
+    if (x > 0 && flag || !false) {
+        print("positive")
+    } else {
+        print("negative")
+    }
+
+    when (x) {
+        1 -> { print("one") }
+        2, 3 -> print("two or three")
+        4 -> print("four")
+        5 -> { val age: Int = 20; print(age) }
+        else -> print("other")
+    }
+
+    for (i in 1..10) {
+        print(i + ",")
+    }
+    print("")
+
+    for (j in 5 downTo 1 step 1) {
+        print(j + "; ")
+    }
+    print("")
+
+    var k: Int = 0
+    do {
+        k = k + 1
+        print(k)
+    } while (k < 3)
+
+    `fun`()
+
+    val res: Int = myFun(2, 3)
+    print("myFun = " + res)
+
+    val message: String = if (res > 4) "Result is large" else "Result is small"
+    print(message)
+
+    print("Enter smth")
+    val input: String = readLine()
+    print("You entered: " + input)
+
+    var a: Real = 2 + 3 - 1
+    a = a * 4 / 2.0
+    val exp: Real = 2.0 ** 2.0 ** 3.0
+    print("exp = " + exp)
+
+    val backtick: Real = `fun`()
+    print("backtick = " + backtick)
 }
